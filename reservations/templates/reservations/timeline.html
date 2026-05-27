@@ -18,25 +18,43 @@
         </div>
 
         <!-- Center -->
-        <div style="display:flex;align-items:center;gap:8px;margin:0 auto;">
-            <a href="/calendar/?month={{ prev_month }}&year={{ prev_year }}" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#666;border:1px solid #777;cursor:pointer;text-decoration:none;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"/>
+        <div style="display:flex;align-items:center;margin:0 auto;background:white;border-radius:8px;border:1px solid #e0e0e0;height:36px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+            <a href="/calendar/?month={{ prev_month }}&year={{ prev_year }}" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;text-decoration:none;">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="10" r="8.5"/>
+                    <polyline points="11.5 7 8.5 10 11.5 13"/>
                 </svg>
             </a>
-            <span style="color:white;font-size:14px;font-weight:700;min-width:120px;text-align:center;">{{ month_name }}</span>
-            <a href="/calendar/?month={{ next_month }}&year={{ next_year }}" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#666;border:1px solid #777;cursor:pointer;text-decoration:none;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
+            <div style="position:relative;display:inline-block;">
+                <div onclick="toggleMonthDropdown()" style="display:flex;align-items:center;gap:5px;cursor:pointer;min-width:120px;justify-content:center;">
+                    <span style="font-size:14px;font-weight:700;color:#1a1a1a;">{{ month_name }}</span>
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="#333">
+                        <path d="M0 0 L5 6 L10 0 Z"/>
+                    </svg>
+                </div>
+                <div id="monthDropdown" style="display:none;position:absolute;top:calc(100% + 12px);left:50%;transform:translateX(-50%);background:white;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.12);border:1px solid #e8e8e8;min-width:180px;padding:8px 0;z-index:999;">
+                    {% for m in dropdown_months %}
+                    <a href="/calendar/?month={{ m.month }}&year={{ m.year }}" style="display:block;padding:12px 24px;text-align:center;text-decoration:none;font-size:14px;font-weight:600;color:#1a1a1a;{% if not forloop.last %}border-bottom:1px solid #f0f0f0;{% endif %}">
+                        {{ m.label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="/calendar/?month={{ next_month }}&year={{ next_year }}" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;text-decoration:none;">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="10" r="8.5"/>
+                    <polyline points="8.5 7 11.5 10 8.5 13"/>
                 </svg>
             </a>
-            <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;cursor:pointer;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div style="width:1px;height:18px;background:#e0e0e0;margin:0 4px;"></div>
+            <button style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:none;background:transparent;cursor:pointer;margin-right:2px;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
                     <line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
-            </div>
+            </button>
         </div>
 
         <!-- Right -->
@@ -178,6 +196,17 @@
 
     document.addEventListener('DOMContentLoaded', resizeBars);
     window.addEventListener('resize', resizeBars);
+
+    function toggleMonthDropdown() {
+        var dd = document.getElementById('monthDropdown');
+        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', function(e) {
+        var dd = document.getElementById('monthDropdown');
+        if (dd && !dd.contains(e.target) && !e.target.closest('[onclick="toggleMonthDropdown()"]')) {
+            dd.style.display = 'none';
+        }
+    });
 </script>
 
 {% endblock %}

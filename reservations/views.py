@@ -34,6 +34,8 @@ def get_calendar_context(request):
     if selected_listing:
         reservations_qs = reservations_qs.filter(listing=selected_listing)
     reservations = list(reservations_qs.distinct())
+    for r in reservations:
+        r.last_bar_day = r.checkout_date - datetime.timedelta(days=1)
 
     if month == 1:
         prev_month, prev_year = 12, year - 1
@@ -50,6 +52,7 @@ def get_calendar_context(request):
     display_listings = [selected_listing] if selected_listing else list(listings)
     listings_with_reservations = []
     bar_colors = ["#00b4d8", "#4ecdc4", "#45b7d1", "#96ceb4"]
+    global_track = 0
     for listing in display_listings:
         listing_reservations = []
         for idx, r in enumerate(reservations):
@@ -57,6 +60,9 @@ def get_calendar_context(request):
                 r.duration_days = (r.checkout_date - r.checkin_date).days
                 r.start_col = r.checkin_date.day + 1
                 r.bar_color = bar_colors[idx % len(bar_colors)]
+                r.track_index = global_track
+                r.track_top = 24 + global_track * 24
+                global_track += 1
                 listing_reservations.append(r)
         listings_with_reservations.append({
             'listing': listing,
@@ -102,6 +108,19 @@ def dashboard_view(request):
 
 def timeline_view(request):
     context = get_calendar_context(request)
+    month = context['month']
+    year = context['year']
+    dropdown_months = []
+    for i in range(12):
+        m = month + i
+        y = year + (m - 1) // 12
+        m = ((m - 1) % 12) + 1
+        dropdown_months.append({
+            'month': m,
+            'year': y,
+            'label': datetime.date(y, m, 1).strftime('%B %Y'),
+        })
+    context['dropdown_months'] = dropdown_months
     return render(request, 'reservations/timeline.html', context)
 
 
