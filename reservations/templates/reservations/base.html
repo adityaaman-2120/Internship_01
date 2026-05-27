@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>{% block title %}FavHōst{% endblock %}</title>
+</head>
+<body style="margin:0;padding:0;font-family:'Inter',sans-serif;background:#f8f8f8;">
+
+{% with request.path as path %}
+
+<div style="position:fixed;top:0;left:0;right:0;height:56px;background:white;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:1000;font-family:'Inter',sans-serif;">
+
+    <!-- Left: Logo -->
+    <a href="/" style="text-decoration:none;display:flex;flex-direction:column;">
+        <div>
+            <span style="color:#222;font-weight:700;font-size:20px;">Fav</span>
+            <span style="color:#222;font-weight:700;font-size:20px;">H</span>
+            <span style="color:#e74c3c;font-weight:700;font-size:20px;">ō</span>
+            <span style="color:#222;font-weight:700;font-size:20px;">st</span>
+        </div>
+        <div style="color:#aaa;font-size:9px;margin-top:-2px;">Simply Listing Simplified</div>
+    </a>
+
+    <!-- Center: Nav links -->
+    <div style="display:flex;align-items:center;gap:0;">
+        <a href="/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if path == '/' or path == '/dashboard/' %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if path == '/' or path == '/dashboard/' %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
+            <span style="font-size:16px;">&#x229E;</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="/calendar/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if '/calendar/' in path %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if '/calendar/' in path %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
+            <span style="font-size:16px;">&#128197;</span>
+            <span>Calendar</span>
+        </a>
+        <a href="/reservations/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if '/reservations/' in path %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if '/reservations/' in path %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
+            <span style="font-size:16px;">&#128101;&#128101;</span>
+            <span>Reservations</span>
+        </a>
+        <a href="/listings/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if '/listings/' in path %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if '/listings/' in path %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
+            <span style="font-size:16px;">&#9776;</span>
+            <span>Listing</span>
+        </a>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:#888;font-size:11px;cursor:pointer;">
+            <span style="font-size:16px;">&#10003;</span>
+            <span>Tasks</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:#888;font-size:11px;cursor:pointer;">
+            <span style="font-size:16px;">&#10009;</span>
+            <span>Enquiries <span style="color:inherit;">({{ total_reservations_count }})</span></span>
+        </div>
+    </div>
+
+    <!-- Right -->
+    <div style="display:flex;align-items:center;">
+        <a href="/reservations/add/" style="background:#111;color:white;border:none;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;">New <span style="font-size:10px;">&#9662;</span></a>
+        <div style="width:32px;height:32px;border-radius:50%;background:#f0f0f0;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;margin-left:10px;cursor:pointer;font-size:16px;">&#128100;</div>
+    </div>
+
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div style="margin-top:56px;background:#f0fdf4;border-left:3px solid {% if message.level_tag == 'success' %}#22c55e{% elif message.level_tag == 'error' %}#ef4444{% elif message.level_tag == 'warning' %}#f59e0b{% else %}#22c55e{% endif %};color:{% if message.level_tag == 'success' %}#166534{% elif message.level_tag == 'error' %}#991b1b{% elif message.level_tag == 'warning' %}#92400e{% else %}#166534{% endif %};padding:10px 28px;font-size:13px;">
+        {{ message }}
+    </div>
+    {% endfor %}
+{% endif %}
+
+<div style="{% if not messages %}margin-top:56px;{% endif %}min-height:calc(100vh - 56px);background:#f8f8f8;font-family:'Inter',sans-serif;">
+    {% block content %}{% endblock %}
+</div>
+
+{% endwith %}
+
+</body>
+</html>

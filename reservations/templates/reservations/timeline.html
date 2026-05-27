@@ -1,0 +1,114 @@
+{% extends 'reservations/base.html' %}
+{% block title %}Calendar — Timeline View{% endblock %}
+{% block content %}
+
+<div style="display:flex;flex-direction:column;height:calc(100vh - 56px);overflow:hidden;background:#f8f8f8;">
+
+    <!-- Sub-header bar -->
+    <div style="display:flex;align-items:center;height:40px;background:#1a1a2e;padding:0 16px;gap:12px;flex-shrink:0;border-bottom:1px solid #2a2a3e;">
+
+        <span style="color:#888;font-size:12px;display:flex;align-items:center;gap:6px;">
+            ☰ Calendar - Timeline view
+        </span>
+
+        <a href="/calendar/?month={{ prev_month }}&year={{ prev_year }}" style="color:#ccc;text-decoration:none;font-size:18px;padding:4px 10px;background:#2a2a3e;border-radius:4px;">‹</a>
+        <span style="color:white;font-size:13px;font-weight:500;padding:0 8px;">{{ month_name }}</span>
+        <a href="/calendar/?month={{ next_month }}&year={{ next_year }}" style="color:#ccc;text-decoration:none;font-size:18px;padding:4px 10px;background:#2a2a3e;border-radius:4px;">›</a>
+        <span style="color:#555;font-size:12px;padding:4px 8px;background:#2a2a3e;border-radius:4px;cursor:pointer;">📅</span>
+
+        <div style="margin-left:auto;display:flex;gap:6px;">
+            <span style="color:#666;font-size:11px;padding:4px 8px;background:#2a2a3e;border-radius:4px;">⊞</span>
+            <span style="color:#666;font-size:11px;padding:4px 8px;background:#2a2a3e;border-radius:4px;">↺</span>
+            <span style="color:#666;font-size:11px;padding:4px 8px;background:#2a2a3e;border-radius:4px;">☰</span>
+            <span style="color:#666;font-size:11px;padding:4px 8px;background:#2a2a3e;border-radius:4px;">⊡</span>
+        </div>
+
+    </div>
+
+    <!-- Timeline grid -->
+    <div style="flex:1;overflow:auto;position:relative;">
+
+        <div id="timeline-grid" style="display:grid;grid-template-columns:160px repeat({{ num_days }},minmax(42px,1fr));min-width:calc(160px + {{ num_days }} * 42px);">
+
+            <!-- Row 0 — Day header -->
+            <div style="grid-column:1;grid-row:1;background:white;border-right:1px solid #e0e0e0;border-bottom:1px solid #e0e0e0;position:sticky;left:0;z-index:20;padding:6px 10px;">
+                <input type="text" placeholder="🔍 Search listings" oninput="filterRows(this.value)" style="width:100%;padding:5px 10px;border:1px solid #e0e0e0;border-radius:16px;font-size:11px;color:#333;outline:none;box-sizing:border-box;">
+            </div>
+
+            {% for day in calendar_days %}
+            <div class="day-header-cell" style="grid-column:{{ forloop.counter|add:1 }};grid-row:1;background:white;border-right:1px solid #e8e8e8;border-bottom:1px solid #e0e0e0;text-align:center;padding:4px 2px;position:sticky;top:0;z-index:10;{% if day == today %}background:#f0f9ff;{% endif %}">
+                <div style="font-size:12px;color:{% if day == today %}#0ea5e9{% else %}#333{% endif %};font-weight:{% if day == today %}700{% else %}500{% endif %};">
+                    {{ day.day }}
+                </div>
+                <div style="font-size:9px;color:#aaa;text-transform:uppercase;">
+                    {{ day|date:'D'|slice:':3' }}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Listing rows -->
+            {% for item in listings_with_reservations %}
+
+            <div style="grid-column:1;grid-row:{{ forloop.counter|add:1 }};background:white;border-right:1px solid #e0e0e0;border-bottom:1px solid #f0f0f0;position:sticky;left:0;z-index:5;display:flex;align-items:center;padding:0 10px;height:40px;" class="listing-row-label" data-name="{{ item.listing.room_title|lower }}">
+                {% if item.listing.room_image %}
+                <img src="{{ item.listing.room_image.url }}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;margin-right:8px;flex-shrink:0;">
+                {% else %}
+                <div style="width:26px;height:26px;border-radius:50%;background:#e8f8fa;color:#00b4b4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;margin-right:8px;flex-shrink:0;">{{ item.listing.room_title|first|upper }}</div>
+                {% endif %}
+                <span style="font-size:12px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ item.listing.room_title }}</span>
+            </div>
+
+            {% for day in calendar_days %}
+            <div style="grid-column:{{ forloop.counter|add:1 }};grid-row:{{ forloop.parentloop.counter|add:1 }};border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;height:40px;position:relative;background:{% if day == today %}#f0f9ff{% else %}white{% endif %};">
+                {% for res in item.reservations %}
+                {% if res.checkin_date == day %}
+                <div class="res-bar" data-nights="{{ res.nights }}" style="position:absolute;left:2px;top:6px;height:28px;width:50px;border-radius:14px;background:{% cycle '#5bc8c8' '#e8837d' '#7b9fd4' '#7bcf9e' '#e8a87d' '#a87bcc' '#e8c87d' '#7bbfcf' %};display:flex;align-items:center;padding:0 8px;z-index:3;overflow:hidden;white-space:nowrap;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1);" title="{{ res.guest_name }}: {{ res.checkin_date }} → {{ res.checkout_date }} ({{ res.nights }} nights)" onclick="window.location='/reservations/{{ res.id }}/edit/'">
+                    {% if res.guest_photo %}
+                    <img src="{{ res.guest_photo.url }}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;margin-right:5px;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.5);">
+                    {% else %}
+                    <div style="width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-right:5px;flex-shrink:0;">{{ res.guest_name|first|upper }}</div>
+                    {% endif %}
+                    <span style="font-size:11px;color:white;font-weight:500;overflow:hidden;text-overflow:ellipsis;">{{ res.guest_name }}</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% empty %}
+            <div style="grid-column:1/-1;padding:60px;text-align:center;color:#aaa;">
+                <div style="font-size:36px;margin-bottom:12px;">📅</div>
+                No listings found. <a href="/listings/add/" style="color:#00b4b4;">Add a listing →</a>
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function filterRows(query) {
+    document.querySelectorAll('.listing-row-label').forEach(function(el) {
+        var name = el.dataset.name || '';
+        var visible = name.includes(query.toLowerCase());
+        el.style.display = visible ? 'flex' : 'none';
+    });
+}
+
+function resizeBars() {
+    var sampleCell = document.querySelector('.day-header-cell');
+    if (!sampleCell) return;
+    var colWidth = sampleCell.getBoundingClientRect().width;
+    document.querySelectorAll('.res-bar').forEach(function(bar) {
+        var nights = parseInt(bar.dataset.nights) || 1;
+        bar.style.width = (nights * colWidth - 4) + 'px';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', resizeBars);
+window.addEventListener('resize', resizeBars);
+</script>
+
+{% endblock %}

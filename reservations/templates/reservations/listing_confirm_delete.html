@@ -1,0 +1,25 @@
+{% extends 'reservations/base.html' %}
+{% block title %}Delete Listing{% endblock %}
+{% block content %}
+
+<div style="max-width:440px;margin:80px auto;background:#1e1e2e;border-radius:16px;padding:36px;border:1px solid #2a2a3e;">
+
+    <div style="font-size:40px;color:#ffb347;text-align:center;">&#9888;&#65039;</div>
+
+    <h1 style="color:#fff;font-size:20px;font-weight:600;text-align:center;margin:16px 0 8px;">Delete Listing?</h1>
+
+    <p style="color:#aaa;font-size:14px;text-align:center;margin:0 0 24px;">
+        Are you sure you want to delete '{{ listing.room_title }}'? This will also delete ALL reservations linked to this listing. This action cannot be undone.
+    </p>
+
+    <div style="display:flex;gap:12px;justify-content:center;">
+        <a href="/listings/" style="background:#2a2a3e;color:#fff;border-radius:8px;padding:10px 24px;text-decoration:none;font-size:14px;">Cancel</a>
+        <form method="POST" action="/listings/{{ listing.pk }}/delete/" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Yes, Delete</button>
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

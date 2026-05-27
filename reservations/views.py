@@ -1,81 +1,238 @@
-import calendar
-from datetime import date
+import calendar as cal
+import datetime
 
-from django.shortcuts import render
+from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 
+from .forms import ListingForm, ReservationForm
 from .models import Listing, Reservation
 
 
-def calendar_view(request):
-    today = date.today()
+# ── Shared context helper ──────────────────────────────────────────────────────
+def get_calendar_context(request):
+    today = datetime.date.today()
+    month = int(request.GET.get('month', today.month))
+    year = int(request.GET.get('year', today.year))
+    listing_id = request.GET.get('listing_id')
 
-    try:
-        current_month = int(request.GET.get("month", today.month))
-    except (ValueError, TypeError):
-        current_month = today.month
-
-    try:
-        current_year = int(request.GET.get("year", today.year))
-    except (ValueError, TypeError):
-        current_year = today.year
-
-    selected_listing_id = request.GET.get("listing_id")
-
-    listings = Listing.objects.all().order_by("id")
-
+    listings = Listing.objects.all()
     selected_listing = None
-    if selected_listing_id:
-        try:
-            selected_listing = Listing.objects.get(id=selected_listing_id)
-        except Listing.DoesNotExist:
-            selected_listing = None
+    if listing_id:
+        selected_listing = get_object_or_404(Listing, pk=listing_id)
 
+    num_days = cal.monthrange(year, month)[1]
+    calendar_days = [datetime.date(year, month, d) for d in range(1, num_days + 1)]
+
+    month_start = datetime.date(year, month, 1)
+    month_end = datetime.date(year, month, num_days)
+
+    reservations_qs = Reservation.objects.select_related('listing').filter(
+        checkin_date__lte=month_end,
+        checkout_date__gte=month_start
+    )
     if selected_listing:
-        reservations = Reservation.objects.filter(listing_id=selected_listing.id).select_related("listing")
-        listings_to_show = [selected_listing]
+        reservations_qs = reservations_qs.filter(listing=selected_listing)
+    reservations = list(reservations_qs.distinct())
+
+    if month == 1:
+        prev_month, prev_year = 12, year - 1
     else:
-        reservations = Reservation.objects.all().select_related("listing")
-        listings_to_show = listings
+        prev_month, prev_year = month - 1, year
+    if month == 12:
+        next_month, next_year = 1, year + 1
+    else:
+        next_month, next_year = month + 1, year
 
-    _, num_days = calendar.monthrange(current_year, current_month)
-    calendar_days = [date(current_year, current_month, d) for d in range(1, num_days + 1)]
+    cal_obj = cal.Calendar(firstweekday=6)
+    weeks = cal_obj.monthdatescalendar(year, month)
 
-    month_name = calendar.month_name[current_month]
-
+    display_listings = [selected_listing] if selected_listing else list(listings)
+    listings_with_reservations = []
     bar_colors = ["#00b4d8", "#4ecdc4", "#45b7d1", "#96ceb4"]
-    for idx, res in enumerate(reservations):
-        res.duration_days = (res.checkout_date - res.checkin_date).days
-        res.start_col = res.checkin_date.day + 1
-        res.bar_color = bar_colors[idx % len(bar_colors)]
+    for listing in display_listings:
+        listing_reservations = []
+        for idx, r in enumerate(reservations):
+            if r.listing_id == listing.id:
+                r.duration_days = (r.checkout_date - r.checkin_date).days
+                r.start_col = r.checkin_date.day + 1
+                r.bar_color = bar_colors[idx % len(bar_colors)]
+                listing_reservations.append(r)
+        listings_with_reservations.append({
+            'listing': listing,
+            'reservations': listing_reservations,
+        })
 
-    prev_month = current_month - 1
-    prev_year = current_year
-    if prev_month == 0:
-        prev_month = 12
-        prev_year -= 1
-
-    next_month = current_month + 1
-    next_year = current_year
-    if next_month == 13:
-        next_month = 1
-        next_year += 1
-
-    context = {
-        "today": today,
-        "listings": listings,
-        "reservations": reservations,
-        "selected_listing": selected_listing,
-        "selected_listing_id": selected_listing.id if selected_listing else None,
-        "listings_to_show": listings_to_show,
-        "calendar_days": calendar_days,
-        "num_days": num_days,
-        "current_month": current_month,
-        "current_year": current_year,
-        "month_name": month_name,
-        "prev_month": prev_month,
-        "prev_year": prev_year,
-        "next_month": next_month,
-        "next_year": next_year,
+    return {
+        'listings': listings,
+        'listings_with_reservations': listings_with_reservations,
+        'selected_listing': selected_listing,
+        'selected_listing_id': int(listing_id) if listing_id else None,
+        'calendar_days': calendar_days,
+        'weeks': weeks,
+        'today': today,
+        'month': month,
+        'year': year,
+        'month_name': datetime.date(year, month, 1).strftime('%B %Y'),
+        'prev_month': prev_month,
+        'prev_year': prev_year,
+        'next_month': next_month,
+        'next_year': next_year,
+        'num_days': num_days,
+        'total_reservations_count': Reservation.objects.filter(
+            checkin_date__year=year, checkin_date__month=month
+        ).count(),
     }
 
-    return render(request, "reservations/calendar.html", context)
+
+def dashboard_view(request):
+    context = get_calendar_context(request)
+    return render(request, 'reservations/dashboard.html', context)
+
+
+def timeline_view(request):
+    context = get_calendar_context(request)
+    return render(request, 'reservations/timeline.html', context)
+
+
+# ── LIST all listings ──────────────────────────────────────────────────────────
+def listing_list(request):
+    listings = Listing.objects.all()
+    return render(request, 'reservations/listing_list.html', {'listings': listings})
+
+
+# ── ADD a new listing ─────────────────────────────────────────────────────────
+def listing_add(request):
+    if request.method == 'POST':
+        form = ListingForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Listing added successfully!')
+            return redirect('listing_list')
+    else:
+        form = ListingForm()
+    return render(request, 'reservations/listing_form.html', {'form': form, 'action': 'Add Listing'})
+
+
+# ── EDIT an existing listing ──────────────────────────────────────────────────
+def listing_edit(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    if request.method == 'POST':
+        form = ListingForm(request.POST, request.FILES, instance=listing)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Listing updated successfully!')
+            return redirect('listing_list')
+    else:
+        form = ListingForm(instance=listing)
+    return render(request, 'reservations/listing_form.html', {'form': form, 'action': 'Edit Listing', 'listing': listing})
+
+
+# ── DELETE a listing ──────────────────────────────────────────────────────────
+def listing_delete(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    if request.method == 'POST':
+        listing.delete()
+        messages.success(request, 'Listing deleted.')
+        return redirect('listing_list')
+    return render(request, 'reservations/listing_confirm_delete.html', {'listing': listing})
+
+
+# ── LIST all reservations ─────────────────────────────────────────────────────
+def reservation_list(request):
+    reservations = Reservation.objects.select_related('listing').all().order_by('-checkin_date')
+    return render(request, 'reservations/reservation_list.html', {'reservations': reservations})
+
+
+# ── ADD a new reservation ─────────────────────────────────────────────────────
+def reservation_add(request):
+    if request.method == 'POST':
+        form = ReservationForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Reservation added successfully!')
+            return redirect('calendar_view')
+    else:
+        initial = {}
+        listing_id = request.GET.get('listing_id')
+        if listing_id:
+            initial['listing'] = listing_id
+        form = ReservationForm(initial=initial)
+    return render(request, 'reservations/reservation_form.html', {
+        'form': form,
+        'action': 'Add Reservation'
+    })
+
+
+# ── EDIT an existing reservation ─────────────────────────────────────────────
+def reservation_edit(request, pk):
+    reservation = get_object_or_404(Reservation, pk=pk)
+    if request.method == 'POST':
+        form = ReservationForm(request.POST, request.FILES, instance=reservation)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Reservation updated!')
+            return redirect('calendar_view')
+    else:
+        form = ReservationForm(instance=reservation)
+    return render(request, 'reservations/reservation_form.html', {
+        'form': form,
+        'action': 'Edit Reservation',
+        'reservation': reservation
+    })
+
+
+# ── DELETE a reservation ──────────────────────────────────────────────────────
+def reservation_delete(request, pk):
+    reservation = get_object_or_404(Reservation, pk=pk)
+    if request.method == 'POST':
+        reservation.delete()
+        messages.success(request, 'Reservation deleted.')
+        return redirect('calendar_view')
+    return render(request, 'reservations/reservation_confirm_delete.html', {'reservation': reservation})
+
+
+# ── API endpoints ─────────────────────────────────────────────────────────────
+def api_listings(request):
+    listings = Listing.objects.all()
+    data = []
+    for l in listings:
+        data.append({
+            'id': l.id,
+            'room_title': l.room_title,
+            'image_url': l.room_image.url if l.room_image else None,
+        })
+    return JsonResponse({'listings': data})
+
+
+def api_reservations(request):
+    listing_id = request.GET.get('listing_id')
+    month = int(request.GET.get('month', datetime.date.today().month))
+    year = int(request.GET.get('year', datetime.date.today().year))
+
+    reservations = Reservation.objects.select_related('listing').filter(
+        checkin_date__year=year,
+        checkin_date__month=month
+    ) | Reservation.objects.select_related('listing').filter(
+        checkout_date__year=year,
+        checkout_date__month=month
+    )
+
+    if listing_id:
+        reservations = reservations.filter(listing_id=listing_id)
+
+    reservations = reservations.distinct()
+
+    data = []
+    for r in reservations:
+        data.append({
+            'id': r.id,
+            'listing_id': r.listing.id,
+            'listing_title': r.listing.room_title,
+            'guest_name': r.guest_name,
+            'guest_photo_url': r.guest_photo.url if r.guest_photo else None,
+            'checkin_date': r.checkin_date.isoformat(),
+            'checkout_date': r.checkout_date.isoformat(),
+            'nights': r.nights,
+        })
+    return JsonResponse({'reservations': data})

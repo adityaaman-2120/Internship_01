@@ -1,0 +1,38 @@
+{% extends 'reservations/base.html' %}
+{% block title %}{{ action }}{% endblock %}
+{% block content %}
+
+<div style="max-width:520px;margin:48px auto;background:#1e1e2e;border-radius:16px;padding:36px;border:1px solid #2a2a3e;">
+
+    <h1 style="color:#fff;font-size:22px;font-weight:600;margin:0 0 6px;">{{ action }}</h1>
+    <p style="color:#888;font-size:13px;margin:0 0 28px;">Fill in the details below</p>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if listing and listing.room_image %}
+        <div style="margin-bottom:20px;">
+            <img src="{{ listing.room_image.url }}" alt="Current image" style="width:80px;height:80px;border-radius:8px;object-fit:cover;">
+        </div>
+        {% endif %}
+
+        {% for field in form %}
+        <div style="margin-bottom:20px;">
+            <label style="color:#ccc;font-size:13px;font-weight:500;display:block;margin-bottom:6px;">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div style="color:#ff6b6b;font-size:12px;margin-top:4px;">
+                {% for error in field.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" style="width:100%;padding:12px;background:#00b4d8;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">{{ action }}</button>
+    </form>
+
+    <a href="/listings/" style="color:#888;font-size:13px;text-decoration:none;display:block;text-align:center;margin-top:14px;">&larr; Back to Listings</a>
+
+</div>
+
+{% endblock %}
