@@ -108,42 +108,50 @@
             <div style="flex:1;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid #d0d0d0;min-height:0;">
                 {% for day in week %}
                 {% if day.month == month %}
-                <div style="padding:4px 8px;border-right:1.5px solid #d0d0d0;background:{% if day == today %}#f0f9ff{% elif day < today %}#f7f7f7{% else %}white{% endif %};position:relative;" data-date="{{ day|date:'Y-m-d' }}">
-                    <div style="font-size:12px;font-weight:{% if day == today %}800{% else %}600{% endif %};color:{% if day == today %}#111{% elif day < today %}#aaa{% else %}#555{% endif %};margin-bottom:2px;display:flex;align-items:center;gap:4px;position:relative;z-index:3;">
+                <div style="padding:4px 6px;border-right:1.5px solid #d0d0d0;background:{% if day == today %}#f0f9ff{% elif day < today %}#f7f7f7{% else %}white{% endif %};display:flex;flex-direction:column;min-height:72px;position:relative;" data-date="{{ day|date:'Y-m-d' }}">
+                    <div style="font-size:12px;font-weight:{% if day == today %}800{% else %}600{% endif %};color:{% if day == today %}#111{% elif day < today %}#aaa{% else %}#555{% endif %};display:flex;align-items:center;gap:4px;flex-shrink:0;">
                         {{ day.day }}
                         {% if day == today %}
                         <span style="font-size:9px;color:#555;font-weight:400;">Today</span>
                         {% endif %}
                     </div>
-                    {% for item in listings_with_reservations %}
-                    {% for res in item.reservations %}
-                    {% if res.checkin_date <= day and res.checkout_date > day %}
-                    <div style="position:absolute;left:0;right:0;height:22px;background:{% if res.checkout_date <= today %}#9dd5d5{% elif res.checkin_date > today %}#3a8a8a{% else %}#5bc8c8{% endif %};top:{{ res.track_top }}px;display:flex;align-items:center;z-index:2;{% if res.checkin_date == day and res.nights == 1 %}margin:0;border-radius:20px;{% elif res.checkin_date == day %}margin:0;border-radius:20px 0 0 20px;padding:0 0 0 6px;{% elif day == res.last_bar_day %}margin:0;border-radius:0 20px 20px 0;padding:0;{% else %}margin:0;border-radius:0;{% endif %}">
-                        {% if res.checkin_date == day %}
-                        {% if res.guest_photo %}
-                        <img src="{{ res.guest_photo.url }}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.5);margin-right:4px;">
+                    <div class="pill-container" style="flex:1;display:flex;flex-direction:column;gap:2px;overflow:hidden;margin-top:2px;">
+                        {% for item in listings_with_reservations %}
+                        {% for res in item.reservations %}
+                        {% if res.checkin_date <= day and res.checkout_date > day %}
+                        <div class="reservation-pill" style="display:flex;align-items:center;gap:3px;padding:1px 4px;border-radius:4px;background:{% if res.checkout_date <= today %}#9dd5d5{% elif res.checkin_date > today %}#3a8a8a{% else %}#5bc8c8{% endif %};height:18px;overflow:hidden;flex-shrink:0;" title="{{ res.guest_name }} ({{ res.checkin_date }} - {{ res.checkout_date }})">
+                            {% if res.checkin_date == day %}
+                            {% if res.guest_photo %}
+                            <img src="{{ res.guest_photo.url }}" style="width:12px;height:12px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.5);">
+                            {% else %}
+                            <div style="width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;flex-shrink:0;">{{ res.guest_name|first|upper }}</div>
+                            {% endif %}
+                            <span style="font-size:9px;color:white;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ res.guest_name }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                        {% endfor %}
+                        <div class="more-indicator" style="display:none;font-size:10px;color:#888;text-align:right;font-weight:700;padding:0 2px;margin-top:-2px;cursor:pointer;" onclick="event.stopPropagation();openDayModal(this.closest('[data-date]').getAttribute('data-date'));"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:14px;">
+                        {% if selected_listing and day not in booked_days %}
+                        <div style="flex:1;display:flex;align-items:center;gap:4px;">
+                            <div style="flex:1;height:1px;background:#d0d0d0;"></div>
+                            <span style="color:#bbb;font-size:9px;">day off</span>
+                            <div style="flex:1;height:1px;background:#d0d0d0;"></div>
+                        </div>
                         {% else %}
-                        <div style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;flex-shrink:0;margin-right:4px;">{{ res.guest_name|first|upper }}</div>
+                        <span></span>
                         {% endif %}
-                        <span style="font-size:10px;color:white;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ res.guest_name }}</span>
+                        {% for item in listings_with_reservations %}
+                        {% for res in item.reservations %}
+                        {% if res.checkout_date == day and res.price_per_night %}
+                        <span style="font-size:9px;color:#888;font-weight:600;flex-shrink:0;">${{ res.price_per_night }}</span>
                         {% endif %}
+                        {% endfor %}
+                        {% endfor %}
                     </div>
-                    {% endif %}
-                    {% if res.checkout_date == day and res.price_per_night %}
-                    <div style="position:absolute;bottom:2px;right:6px;font-size:9px;color:#aaa;font-weight:500;">
-                        ${{ res.price_per_night }}
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                    {% endfor %}
-
-                    {% if selected_listing and day not in booked_days %}
-                    <div style="position:absolute;left:8px;right:8px;bottom:4px;display:flex;align-items:center;color:#bbb;font-size:9px;gap:4px;">
-                        <div style="flex:1;height:1px;background:#d0d0d0;"></div>
-                        <span>day off</span>
-                        <div style="flex:1;height:1px;background:#d0d0d0;"></div>
-                    </div>
-                    {% endif %}
                 </div>
                 {% else %}
                 <div style="background:#fafafa;border-right:1px solid #f0f0f0;"></div>
@@ -159,7 +167,125 @@
 
 </div>
 
+<div id="dayModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:1000;justify-content:center;align-items:center;backdrop-filter:blur(2px);" onclick="if(event.target===this)closeDayModal()">
+    <div style="background:white;border-radius:12px;width:500px;max-width:92vw;max-height:85vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);display:flex;flex-direction:column;animation:fadeSlideIn 0.2s ease;">
+        <style>
+            @keyframes fadeSlideIn{from{transform:translateY(10px)}to{transform:translateY(0)}}
+            #dayModal a{text-decoration:none}
+            .modal-card{transition:box-shadow 0.15s}
+            .modal-card:hover{box-shadow:0 2px 12px rgba(0,0,0,0.08)!important}
+        </style>
+        <div style="padding:20px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:44px;height:44px;border-radius:10px;background:#f0f4ff;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span id="modalDayNum" style="font-size:18px;font-weight:800;color:#4a6cf7;line-height:1.1;"></span>
+                    <span id="modalDayName" style="font-size:9px;font-weight:600;color:#6b8cff;text-transform:uppercase;line-height:1;"></span>
+                </div>
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:#1a1a1a;"><span id="modalMonthYear"></span></div>
+                    <div style="font-size:12px;color:#999;margin-top:2px;"><span id="modalResCount"></span></div>
+                </div>
+            </div>
+            <div onclick="closeDayModal()" style="width:30px;height:30px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:#888;line-height:1;transition:background 0.15s;" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#f5f5f5'">✕</div>
+        </div>
+        <div id="modalBody" style="flex:1;overflow-y:auto;padding:16px 24px 20px;"></div>
+    </div>
+</div>
+
 <script>
+var reservationsData = {{ reservations_by_date_json|safe }};
+
+function openDayModal(dateStr) {
+    var modal = document.getElementById('dayModal');
+    var body = document.getElementById('modalBody');
+    var dayNumEl = document.getElementById('modalDayNum');
+    var dayNameEl = document.getElementById('modalDayName');
+    var monthYearEl = document.getElementById('modalMonthYear');
+    var countEl = document.getElementById('modalResCount');
+
+    var parts = dateStr.split('-');
+    var d = new Date(parts[0], parts[1]-1, parts[2]);
+    var weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    dayNumEl.textContent = d.getDate();
+    dayNameEl.textContent = weekdays[d.getDay()];
+    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    monthYearEl.textContent = months[d.getMonth()] + ' ' + d.getFullYear();
+
+    var dayRes = reservationsData[dateStr] || [];
+    countEl.textContent = dayRes.length + ' reservation' + (dayRes.length !== 1 ? 's' : '');
+
+    var today = '{{ today|date:"Y-m-d" }}';
+
+    if (dayRes.length === 0) {
+        var selListing = '{{ selected_listing_id|default:"" }}';
+        var addUrl = '/reservations/add/?checkin=' + dateStr;
+        if (selListing) addUrl += '&listing_id=' + selListing;
+        body.innerHTML = '<div style="text-align:center;padding:50px 20px;">' +
+            '<div style="width:48px;height:48px;border-radius:12px;background:#f0f4ff;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+            '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>' +
+            '<line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+            '</div>' +
+            '<div style="color:#aaa;font-size:14px;margin-bottom:16px;">No reservations on this day</div>' +
+            '<a href="' + addUrl + '" style="display:inline-block;background:#4a6cf7;color:white;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:500;">+ Add Reservation</a>' +
+            '</div>';
+    } else {
+        var html = '';
+        for (var i = 0; i < dayRes.length; i++) {
+            var r = dayRes[i];
+            var statusText = '';
+            var statusColor = '';
+            if (r.is_checkin && r.is_checkout) {
+                statusText = '1 Night';
+                statusColor = '#5bc8c8';
+            } else if (r.is_checkin) {
+                statusText = 'Check-in';
+                statusColor = '#22c55e';
+            } else if (r.is_checkout) {
+                statusText = 'Check-out';
+                statusColor = '#ef4444';
+            } else {
+                statusText = 'In Stay';
+                statusColor = '#4a6cf7';
+            }
+            var isPast = dateStr < today;
+            html += '<div class="modal-card" style="border:1px solid #eee;border-radius:10px;margin-bottom:10px;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04);' + (isPast ? 'opacity:0.65;' : '') + '">' +
+                '<div style="display:flex;align-items:center;padding:12px 14px;gap:12px;">' +
+                (r.guest_photo_url
+                    ? '<img src="' + r.guest_photo_url + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #f0f0f0;">'
+                    : '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#e8f0ff,#d4e0ff);color:#4a6cf7;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;">' + r.guest_name.charAt(0).toUpperCase() + '</div>'
+                ) +
+                '<div style="flex:1;min-width:0;">' +
+                '<div style="font-size:13px;font-weight:600;color:#1a1a1a;">' + r.guest_name + '</div>' +
+                '<div style="font-size:11px;color:#999;margin-top:1px;">' + r.listing_title + '</div>' +
+                '</div>' +
+                '<span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:8px;color:white;background:' + statusColor + ';flex-shrink:0;letter-spacing:0.2px;">' + statusText + '</span>' +
+                '</div>' +
+                '<div style="display:flex;align-items:center;padding:6px 14px 8px;background:#fafafa;border-top:1px solid #f5f5f5;gap:16px;font-size:11px;color:#888;">' +
+                '<span style="display:flex;align-items:center;gap:4px;">' +
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+                r.checkin + ' → ' + r.checkout + '</span>' +
+                '<span style="display:flex;align-items:center;gap:4px;">' +
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>' +
+                r.nights + ' night' + (r.nights > 1 ? 's' : '') + '</span>' +
+                (r.price ? '<span style="margin-left:auto;font-weight:600;color:#1a1a1a;">$' + r.price + '/night</span>' : '') +
+                '</div>' +
+                '<div style="display:flex;gap:6px;padding:4px 14px 10px;background:#fafafa;border-top:0;">' +
+                '<a href="/reservations/' + r.id + '/edit/" style="font-size:11px;color:#555;border:1px solid #e0e0e0;padding:4px 12px;border-radius:6px;transition:background 0.15s;background:white;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'white\'">Edit</a>' +
+                '<a href="/?listing_id=' + r.listing_id + '&month=' + parts[1] + '&year=' + parts[0] + '" style="font-size:11px;color:#555;border:1px solid #e0e0e0;padding:4px 12px;border-radius:6px;transition:background 0.15s;background:white;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'white\'">View Room</a>' +
+                '</div>' +
+                '</div>';
+        }
+        body.innerHTML = html;
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeDayModal() {
+    document.getElementById('dayModal').style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     var today = '{{ today|date:"Y-m-d" }}';
     var cells = document.querySelectorAll('[data-date]');
@@ -168,20 +294,41 @@ document.addEventListener('DOMContentLoaded', function() {
     cells.forEach(function(cell) {
         if (cell.getAttribute('data-date') === today) {
             var div = document.createElement('div');
-            div.style.cssText = 'position:absolute;inset:-1px;z-index:999;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
+            div.style.cssText = 'position:absolute;inset:-1px;z-index:5;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
             cell.appendChild(div);
             selected = cell;
             overlay = div;
         }
         cell.style.cursor = 'pointer';
-        cell.addEventListener('click', function() {
+        cell.addEventListener('click', function(e) {
+            var dateStr = this.getAttribute('data-date');
             if (selected && overlay) overlay.remove();
             var div = document.createElement('div');
-            div.style.cssText = 'position:absolute;inset:-1px;z-index:999;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
+            div.style.cssText = 'position:absolute;inset:-1px;z-index:5;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
             this.appendChild(div);
             selected = this;
             overlay = div;
+            openDayModal(dateStr);
         });
+    });
+
+    // Cap visible pills at 2 per cell, show +N more indicator
+    cells.forEach(function(cell) {
+        var dateStr = cell.getAttribute('data-date');
+        var pills = cell.querySelectorAll('.reservation-pill');
+        var total = (reservationsData[dateStr] || []).length;
+        var moreEl = cell.querySelector('.more-indicator');
+        if (total > 2) {
+            for (var i = 2; i < pills.length; i++) {
+                pills[i].style.display = 'none';
+            }
+            if (moreEl) {
+                moreEl.textContent = '+' + (total - 2);
+                moreEl.style.display = 'block';
+            }
+        } else if (moreEl) {
+            moreEl.style.display = 'none';
+        }
     });
 });
 

@@ -1,5 +1,6 @@
 import calendar as cal
 import datetime
+import json
 
 from django.contrib import messages
 from django.http import JsonResponse
@@ -52,7 +53,6 @@ def get_calendar_context(request):
     display_listings = [selected_listing] if selected_listing else list(listings)
     listings_with_reservations = []
     bar_colors = ["#00b4d8", "#4ecdc4", "#45b7d1", "#96ceb4"]
-    global_track = 0
     for listing in display_listings:
         listing_reservations = []
         for idx, r in enumerate(reservations):
@@ -60,9 +60,8 @@ def get_calendar_context(request):
                 r.duration_days = (r.checkout_date - r.checkin_date).days
                 r.start_col = r.checkin_date.day + 1
                 r.bar_color = bar_colors[idx % len(bar_colors)]
-                r.track_index = global_track
-                r.track_top = 24 + global_track * 24
-                global_track += 1
+                r.track_index = idx
+                r.track_top = 24 + idx * 24
                 listing_reservations.append(r)
         listings_with_reservations.append({
             'listing': listing,
@@ -117,6 +116,34 @@ def dashboard_view(request):
             'is_current': (m == month and y == year),
         })
     context['dropdown_months'] = dropdown_months
+
+    # --- Build reservations_by_date for the popup ---
+    from datetime import timedelta
+    reservations_by_date = {}
+    for item in context['listings_with_reservations']:
+        listing_title = item['listing'].room_title
+        for res in item['reservations']:
+            d = res.checkin_date
+            while d < res.checkout_date:
+                date_key = d.isoformat()
+                if date_key not in reservations_by_date:
+                    reservations_by_date[date_key] = []
+                reservations_by_date[date_key].append({
+                    'id': res.id,
+                    'guest_name': res.guest_name,
+                    'guest_photo_url': res.guest_photo.url if res.guest_photo else None,
+                    'listing_title': listing_title,
+                    'listing_id': res.listing_id,
+                    'checkin': res.checkin_date.isoformat(),
+                    'checkout': res.checkout_date.isoformat(),
+                    'nights': res.nights,
+                    'price': str(res.price_per_night) if res.price_per_night else None,
+                    'is_checkin': d == res.checkin_date,
+                    'is_checkout': (d + timedelta(days=1)) == res.checkout_date,
+                })
+                d += timedelta(days=1)
+    context['reservations_by_date_json'] = json.dumps(reservations_by_date)
+
     return render(request, 'reservations/dashboard.html', context)
 
 
