@@ -103,6 +103,20 @@ def get_calendar_context(request):
 
 def dashboard_view(request):
     context = get_calendar_context(request)
+    month = context['month']
+    year = context['year']
+    dropdown_months = []
+    for i in range(-2, 3):
+        m = month + i
+        y = year + (m - 1) // 12
+        m = ((m - 1) % 12) + 1
+        dropdown_months.append({
+            'month': m,
+            'year': y,
+            'label': datetime.date(y, m, 1).strftime('%B %Y'),
+            'is_current': (m == month and y == year),
+        })
+    context['dropdown_months'] = dropdown_months
     return render(request, 'reservations/dashboard.html', context)
 
 
@@ -111,7 +125,7 @@ def timeline_view(request):
     month = context['month']
     year = context['year']
     dropdown_months = []
-    for i in range(12):
+    for i in range(-2, 3):
         m = month + i
         y = year + (m - 1) // 12
         m = ((m - 1) % 12) + 1
@@ -119,6 +133,7 @@ def timeline_view(request):
             'month': m,
             'year': y,
             'label': datetime.date(y, m, 1).strftime('%B %Y'),
+            'is_current': (m == month and y == year),
         })
     context['dropdown_months'] = dropdown_months
     return render(request, 'reservations/timeline.html', context)

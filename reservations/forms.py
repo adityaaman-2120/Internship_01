@@ -11,11 +11,11 @@ class ListingForm(forms.ModelForm):
         widgets = {
             'room_title': forms.TextInput(attrs={
                 'placeholder': 'e.g. Cozy Studio in Downtown',
-                'style': 'width:100%; padding:10px 14px; background:#2a2a3e; border:1px solid #444; border-radius:8px; color:white; font-size:14px;'
+                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
             }),
             'room_image': forms.ClearableFileInput(attrs={
                 'accept': 'image/*',
-                'style': 'color:#aaa; font-size:13px;'
+                'style': 'color:#666; font-size:13px;'
             }),
         }
         labels = {
@@ -30,27 +30,27 @@ class ReservationForm(forms.ModelForm):
         fields = ['listing', 'guest_name', 'guest_photo', 'checkin_date', 'checkout_date', 'price_per_night']
         widgets = {
             'listing': forms.Select(attrs={
-                'style': 'width:100%; padding:10px 14px; background:#2a2a3e; border:1px solid #444; border-radius:8px; color:white; font-size:14px;'
+                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
             }),
             'guest_name': forms.TextInput(attrs={
                 'placeholder': 'Guest full name',
-                'style': 'width:100%; padding:10px 14px; background:#2a2a3e; border:1px solid #444; border-radius:8px; color:white; font-size:14px;'
+                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
             }),
             'guest_photo': forms.ClearableFileInput(attrs={
                 'accept': 'image/*',
-                'style': 'color:#aaa; font-size:13px;'
+                'style': 'color:#666; font-size:13px;'
             }),
             'checkin_date': forms.DateInput(attrs={
                 'type': 'date',
-                'style': 'width:100%; padding:10px 14px; background:#2a2a3e; border:1px solid #444; border-radius:8px; color:white; font-size:14px;'
+                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
             }),
             'checkout_date': forms.DateInput(attrs={
                 'type': 'date',
-                'style': 'width:100%; padding:10px 14px; background:#2a2a3e; border:1px solid #444; border-radius:8px; color:white; font-size:14px;'
+                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
             }),
             'price_per_night': forms.NumberInput(attrs={
                 'placeholder': '0.00',
-                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px;'
+                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
             }),
         }
         labels = {

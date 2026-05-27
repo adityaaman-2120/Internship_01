@@ -1,7 +1,11 @@
 <div style="width:265px;min-width:265px;background:white;border-right:1px solid #e8e8e8;height:calc(100vh - 56px);overflow-y:auto;display:flex;flex-direction:column;padding-top:16px;">
 
-    <div style="padding:0 16px 12px;">
-        <input type="text" placeholder="🔍  Search listings" oninput="filterListings(this.value)" style="width:100%;padding:9px 14px;border:1.5px solid #e0e0e0;border-radius:22px;font-size:13px;color:#333;background:white;outline:none;box-sizing:border-box;font-family:'Inter',sans-serif;">
+    <div style="padding:0 16px 12px;position:relative;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:26px;top:calc(50% - 6px);transform:translateY(-50%);pointer-events:none;">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Search listings" oninput="filterListings(this.value)" style="width:100%;padding:9px 14px 9px 36px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;color:#333;background:white;outline:none;box-sizing:border-box;font-family:'Inter',sans-serif;">
     </div>
 
     {% for listing in listings %}
