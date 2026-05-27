@@ -108,9 +108,10 @@ Visit **http://127.0.0.1:8000/** to start using the app.
 ### Dashboard (Month Grid)
 The default view at `/` shows a month-grid calendar. Each day cell displays:
 - The day number with today highlighted in blue
-- Reservation pills with guest name and avatar
+- Up to 2 reservation pills with guest name and avatar (when more exist, a `+N` overflow badge is shown)
 - Price-per-night on checkout dates
-- Click a day to quickly add a reservation for that date
+- Click any day cell to open a **popup modal** showing all reservations for that day, with guest details, room info, status badges, date ranges, pricing, and quick Edit/View Room actions
+- The modal also provides a direct link to add a new reservation for that date
 
 ### Timeline View
 Navigate to `/calendar/` for a horizontal timeline:
@@ -238,6 +239,8 @@ Both calendar views share a `get_calendar_context()` helper that handles:
 - **Hover effects** on cards, buttons, and clickable elements
 - **Today highlighting** with blue accent on current date
 - **Search filtering** on sidebar listings and timeline rows
+- **Day-cell popup modal** — click any date to view all reservations with guest info, status badges, and quick actions
+- **Smart pill capping** — cells show at most 2 reservation pills with a `+N` overflow badge for busy dates
 - **Month dropdown** for quick navigation between months
 - **Success/error messages** via Django's messages framework
 - **Dark delete confirmation** dialogs for destructive actions
