@@ -69,6 +69,7 @@ class ReservationForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        listing = cleaned_data.get('listing')
         checkin = cleaned_data.get('checkin_date')
         checkout = cleaned_data.get('checkout_date')
         today = timezone.localdate()
@@ -85,5 +86,18 @@ class ReservationForm(forms.ModelForm):
 
             if (checkout - checkin).days > 365:
                 raise forms.ValidationError("Stay cannot be longer than 365 nights.")
+
+        if listing and checkin and checkout:
+            overlaps = Reservation.objects.filter(
+                listing=listing,
+                checkin_date__lt=checkout,
+                checkout_date__gt=checkin,
+            )
+            if self.instance and self.instance.pk:
+                overlaps = overlaps.exclude(pk=self.instance.pk)
+            if overlaps.exists():
+                raise forms.ValidationError(
+                    f"This room is already booked for the selected dates."
+                )
 
         return cleaned_data

@@ -136,6 +136,58 @@ def timeline_view(request):
             'is_current': (m == month and y == year),
         })
     context['dropdown_months'] = dropdown_months
+
+    # --- Stats calculation ---
+    total_listings = Listing.objects.count()
+    days_in_month = cal.monthrange(year, month)[1]
+
+    col_ranges = [
+        (datetime.date(year, month, 1),  datetime.date(year, month, 10)),
+        (datetime.date(year, month, 11), datetime.date(year, month, 20)),
+        (datetime.date(year, month, 21), datetime.date(year, month, days_in_month)),
+    ]
+    stats_columns = [f"{r[0].day}–{r[1].day}" for r in col_ranges]
+
+    stats_bookings  = []
+    stats_available = []
+    stats_occupancy = []
+
+    for start, end in col_ranges:
+        days_in_range = (end - start).days + 1
+
+        bookings_count = Reservation.objects.filter(
+            checkin_date__lte=end,
+            checkout_date__gt=start
+        ).count()
+
+        total_room_nights = total_listings * days_in_range
+
+        booked_nights = 0
+        reservations_in_range = Reservation.objects.filter(
+            checkin_date__lte=end,
+            checkout_date__gt=start
+        )
+        for res in reservations_in_range:
+            overlap_start = max(res.checkin_date, start)
+            overlap_end   = min(res.checkout_date, end + datetime.timedelta(days=1))
+            booked_nights += (overlap_end - overlap_start).days
+
+        available = total_room_nights - booked_nights
+        occupancy = round((booked_nights / total_room_nights * 100)
+                          if total_room_nights > 0 else 0)
+
+        stats_bookings.append(bookings_count)
+        stats_available.append(max(available, 0))
+        stats_occupancy.append(occupancy)
+
+    context['stats_columns'] = stats_columns
+    context['stats'] = {
+        'bookings':  stats_bookings,
+        'available': stats_available,
+        'occupancy': stats_occupancy,
+    }
+    context['total_listings'] = total_listings
+
     return render(request, 'reservations/timeline.html', context)
 
 

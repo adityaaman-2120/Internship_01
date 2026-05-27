@@ -12,11 +12,11 @@
     <a href="/?listing_id={{ listing.id }}&month={{ month }}&year={{ year }}"
        class="listing-item"
        data-name="{{ listing.room_title|lower }}"
-       style="display:flex;align-items:center;padding:10px 16px;text-decoration:none;border-bottom:1px solid #f0f0f0;background:{% if selected_listing_id == listing.id %}#f0fafb{% else %}white{% endif %};cursor:pointer;position:relative;">
-        {% if listing.room_image %}
-        <img src="{{ listing.room_image.url }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;margin-right:12px;flex-shrink:0;border:2px solid #e8e8e8;">
-        {% else %}
-        <div style="width:44px;height:44px;border-radius:50%;background:#e8f8fa;color:#00b4b4;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;margin-right:12px;flex-shrink:0;border:2px solid #e8e8e8;">{{ listing.room_title|first|upper }}</div>
+        style="display:flex;align-items:center;padding:6px 16px;text-decoration:none;border-bottom:1px solid #f0f0f0;background:{% if selected_listing_id == listing.id %}#f0fafb{% else %}white{% endif %};cursor:pointer;position:relative;">
+         {% if listing.room_image %}
+         <img src="{{ listing.room_image.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;margin-right:10px;flex-shrink:0;border:2px solid #e8e8e8;">
+         {% else %}
+         <div style="width:32px;height:32px;border-radius:50%;background:#e8f8fa;color:#00b4b4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;margin-right:10px;flex-shrink:0;border:2px solid #e8e8e8;">{{ listing.room_title|first|upper }}</div>
         {% endif %}
         <span style="font-size:13px;color:#333;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ listing.room_title }}</span>
         <span style="color:#bbb;font-size:18px;padding-left:8px;flex-shrink:0;">⋮</span>
