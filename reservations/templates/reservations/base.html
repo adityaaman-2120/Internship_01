@@ -12,68 +12,135 @@
 
 {% with request.path as path %}
 
-<div style="position:fixed;top:0;left:0;right:0;height:56px;background:white;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:1000;font-family:'Inter',sans-serif;">
+<div style="position:sticky;top:0;left:0;right:0;height:56px;background:white;border-bottom:1px solid #eee;display:flex;align-items:center;padding:0 24px;z-index:100;font-family:'Inter',sans-serif;flex-shrink:0;">
 
     <!-- Left: Logo -->
-    <a href="/" style="text-decoration:none;display:flex;flex-direction:column;">
-        <div>
-            <span style="color:#222;font-weight:700;font-size:20px;">Fav</span>
-            <span style="color:#222;font-weight:700;font-size:20px;">H</span>
-            <span style="color:#e74c3c;font-weight:700;font-size:20px;">ō</span>
-            <span style="color:#222;font-weight:700;font-size:20px;">st</span>
+    <a href="/" style="text-decoration:none;display:flex;flex-direction:column;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:0;">
+            <span style="color:#e8453c;font-weight:700;font-size:20px;">Fav</span>
+            <svg width="18" height="22" viewBox="0 0 18 22" style="margin:0 1px;">
+                <circle cx="9" cy="3" r="3" fill="#e8453c"/>
+                <path d="M3 21V4M15 21V4M3 12H15" stroke="#e8453c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span style="color:#222;font-weight:700;font-size:20px;">ost</span>
         </div>
-        <div style="color:#aaa;font-size:9px;margin-top:-2px;">Simply Listing Simplified</div>
+        <div style="color:#aaa;font-size:9px;margin-top:-1px;">a better hosting experience</div>
     </a>
 
     <!-- Center: Nav links -->
-    <div style="display:flex;align-items:center;gap:0;">
-        <a href="/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if path == '/' or path == '/dashboard/' %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if path == '/' or path == '/dashboard/' %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
-            <span style="font-size:16px;">&#x229E;</span>
-            <span>Dashboard</span>
+    <div style="display:flex;align-items:center;gap:0;margin:0 auto;">
+        <!-- Dashboard -->
+        <a href="/" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:6px 14px;{% if path == '/' or path == '/dashboard/' %}border-bottom:2px solid #111;{% endif %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{% if path == '/' or path == '/dashboard/' %}#111{% else %}#555{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span style="font-size:11px;color:{% if path == '/' or path == '/dashboard/' %}#111{% else %}#555{% endif %};{% if path == '/' or path == '/dashboard/' %}font-weight:600;{% endif %}">Dashboard</span>
         </a>
-        <a href="/calendar/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if '/calendar/' in path %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if '/calendar/' in path %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
-            <span style="font-size:16px;">&#128197;</span>
-            <span>Calendar</span>
+        <!-- Calendar -->
+        <a href="/calendar/" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:6px 14px;{% if '/calendar/' in path %}border-bottom:2px solid #111;{% endif %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{% if '/calendar/' in path %}#111{% else %}#555{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span style="font-size:11px;color:{% if '/calendar/' in path %}#111{% else %}#555{% endif %};{% if '/calendar/' in path %}font-weight:600;{% endif %}">Calendar</span>
         </a>
-        <a href="/reservations/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if '/reservations/' in path %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if '/reservations/' in path %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
-            <span style="font-size:16px;">&#128101;&#128101;</span>
-            <span>Reservations</span>
+        <!-- Reservations -->
+        <a href="/reservations/" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:6px 14px;{% if '/reservations/' in path %}border-bottom:2px solid #111;{% endif %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{% if '/reservations/' in path %}#111{% else %}#555{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span style="font-size:11px;color:{% if '/reservations/' in path %}#111{% else %}#555{% endif %};{% if '/reservations/' in path %}font-weight:600;{% endif %}">Reservations</span>
         </a>
-        <a href="/listings/" style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:{% if '/listings/' in path %}#111{% else %}#888{% endif %};font-size:11px;cursor:pointer;{% if '/listings/' in path %}font-weight:600;border-bottom:2px solid #111;padding-bottom:4px;{% endif %}">
-            <span style="font-size:16px;">&#9776;</span>
-            <span>Listing</span>
+        <!-- Listing -->
+        <a href="/listings/" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:6px 14px;{% if '/listings/' in path %}border-bottom:2px solid #111;{% endif %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{% if '/listings/' in path %}#111{% else %}#555{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            <span style="font-size:11px;color:{% if '/listings/' in path %}#111{% else %}#555{% endif %};{% if '/listings/' in path %}font-weight:600;{% endif %}">Listing</span>
         </a>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:#888;font-size:11px;cursor:pointer;">
-            <span style="font-size:16px;">&#10003;</span>
-            <span>Tasks</span>
+        <!-- Tasks -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;cursor:pointer;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <span style="font-size:11px;color:#555;">Tasks</span>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;padding:4px 16px;color:#888;font-size:11px;cursor:pointer;">
-            <span style="font-size:16px;">&#10009;</span>
-            <span>Enquiries <span style="color:inherit;">({{ total_reservations_count }})</span></span>
+        <!-- Enquiries -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;cursor:pointer;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <span style="font-size:11px;color:#555;">Enquiries <span style="color:#e8453c;font-weight:600;">({{ total_reservations_count }})</span></span>
         </div>
     </div>
 
     <!-- Right -->
-    <div style="display:flex;align-items:center;">
-        <a href="/reservations/add/" style="background:#111;color:white;border:none;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;">New <span style="font-size:10px;">&#9662;</span></a>
-        <div style="width:32px;height:32px;border-radius:50%;background:#f0f0f0;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;margin-left:10px;cursor:pointer;font-size:16px;">&#128100;</div>
+    <div style="display:flex;align-items:center;flex-shrink:0;position:relative;">
+        <div onclick="var m=document.getElementById('new-menu');m.style.display=m.style.display=='none'?'block':'none'" style="background:#555558;color:white;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;">
+            New
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+        <div id="new-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:white;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);min-width:180px;z-index:200;overflow:hidden;">
+            <a href="/listings/add/" style="display:flex;align-items:center;gap:10px;padding:10px 16px;text-decoration:none;color:#333;font-size:13px;border-bottom:1px solid #f0f0f0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                Add Listing
+            </a>
+            <a href="/reservations/add/" style="display:flex;align-items:center;gap:10px;padding:10px 16px;text-decoration:none;color:#333;font-size:13px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Add Reservation
+            </a>
+        </div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;margin-left:10px;cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+        </div>
     </div>
 
 </div>
 
 {% if messages %}
     {% for message in messages %}
-    <div style="margin-top:56px;background:#f0fdf4;border-left:3px solid {% if message.level_tag == 'success' %}#22c55e{% elif message.level_tag == 'error' %}#ef4444{% elif message.level_tag == 'warning' %}#f59e0b{% else %}#22c55e{% endif %};color:{% if message.level_tag == 'success' %}#166534{% elif message.level_tag == 'error' %}#991b1b{% elif message.level_tag == 'warning' %}#92400e{% else %}#166534{% endif %};padding:10px 28px;font-size:13px;">
+    <div style="background:#f0fdf4;border-left:3px solid {% if message.level_tag == 'success' %}#22c55e{% elif message.level_tag == 'error' %}#ef4444{% elif message.level_tag == 'warning' %}#f59e0b{% else %}#22c55e{% endif %};color:{% if message.level_tag == 'success' %}#166534{% elif message.level_tag == 'error' %}#991b1b{% elif message.level_tag == 'warning' %}#92400e{% else %}#166534{% endif %};padding:10px 28px;font-size:13px;">
         {{ message }}
     </div>
     {% endfor %}
 {% endif %}
 
-<div style="{% if not messages %}margin-top:56px;{% endif %}min-height:calc(100vh - 56px);background:#f8f8f8;font-family:'Inter',sans-serif;">
+<div style="min-height:calc(100vh - 56px);background:#f8f8f8;font-family:'Inter',sans-serif;">
     {% block content %}{% endblock %}
 </div>
 
 {% endwith %}
+
+<script>
+document.addEventListener('click', function(e) {
+    var menu = document.getElementById('new-menu');
+    if (menu) {
+        var btn = menu.previousElementSibling;
+        if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    }
+});
+</script>
 
 </body>
 </html>

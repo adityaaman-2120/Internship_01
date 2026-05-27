@@ -63,11 +63,21 @@ def get_calendar_context(request):
             'reservations': listing_reservations,
         })
 
+    booked_days = set()
+    if selected_listing:
+        from datetime import timedelta
+        for r in reservations_qs.filter(listing=selected_listing):
+            d = r.checkin_date
+            while d < r.checkout_date:
+                booked_days.add(d)
+                d += timedelta(days=1)
+
     return {
         'listings': listings,
         'listings_with_reservations': listings_with_reservations,
         'selected_listing': selected_listing,
         'selected_listing_id': int(listing_id) if listing_id else None,
+        'booked_days': booked_days,
         'calendar_days': calendar_days,
         'weeks': weeks,
         'today': today,

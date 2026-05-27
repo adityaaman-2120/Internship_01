@@ -2,19 +2,80 @@
 {% block title %}Dashboard — {{ month_name }}{% endblock %}
 {% block content %}
 
-<div style="display:flex;height:calc(100vh - 56px);">
+<div style="display:flex;flex-direction:column;height:calc(100vh - 56px);overflow:hidden;background:#f8f8f8;">
 
-    {% include 'reservations/partials/sidebar.html' %}
+    <!-- Sub-header bar (timeline style) -->
+    <div style="display:flex;align-items:center;height:44px;background:#555558;padding:0 16px;flex-shrink:0;border-bottom:1px solid #444;">
 
-    <div style="flex:1;display:flex;flex-direction:column;padding:16px 24px 12px;overflow:hidden;background:#f8f8f8;">
-
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0;">
-            <h2 style="font-size:18px;font-weight:600;color:#222;margin:0;flex:1;">{{ month_name }}</h2>
-            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ prev_month }}&year={{ prev_year }}" style="width:28px;height:28px;border-radius:50%;background:white;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#555;font-size:14px;">&#8249;</a>
-            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ next_month }}&year={{ next_year }}" style="width:28px;height:28px;border-radius:50%;background:white;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#555;font-size:14px;">&#8250;</a>
+        <div style="display:flex;align-items:center;gap:8px;min-width:200px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span style="color:#aaa;font-size:12px;">Dashboard - Month view</span>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin:0 auto;">
+            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ prev_month }}&year={{ prev_year }}" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#666;border:1px solid #777;cursor:pointer;text-decoration:none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </a>
+            <span style="color:white;font-size:14px;font-weight:700;min-width:120px;text-align:center;">{{ month_name }}</span>
+            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ next_month }}&year={{ next_year }}" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#666;border:1px solid #777;cursor:pointer;text-decoration:none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </a>
+            <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+            </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:4px;min-width:200px;justify-content:flex-end;">
+            <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:transparent;border:none;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+            <div onclick="location.reload()" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:transparent;border:none;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:transparent;border:none;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:transparent;border:none;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+                    <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+                    <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+                    <line x1="17" y1="16" x2="23" y2="16"/>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
+    <div style="flex:1;display:flex;overflow:hidden;">
+
+        {% include 'reservations/partials/sidebar.html' %}
+
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);flex-shrink:0;padding:0 24px;">
             <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Su</div>
             <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Mo</div>
             <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Tu</div>
@@ -24,13 +85,13 @@
             <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Sa</div>
         </div>
 
-        <div style="flex:1;display:flex;flex-direction:column;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <div style="flex:1;display:flex;flex-direction:column;margin:0 24px 12px;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
             {% for week in weeks %}
             <div style="flex:1;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #f0f0f0;min-height:0;">
                 {% for day in week %}
                 {% if day.month == month %}
-                <div style="overflow:hidden;padding:3px 6px;border-right:1px solid #f0f0f0;background:{% if day == today %}#f0f9ff{% else %}white{% endif %};position:relative;">
-                    <div style="font-size:11px;font-weight:{% if day == today %}700{% else %}400{% endif %};color:{% if day == today %}#111{% else %}#999{% endif %};margin-bottom:2px;display:flex;align-items:center;gap:4px;">
+                <div style="overflow:hidden;padding:3px 6px;border-right:1px solid #f0f0f0;background:{% if day == today %}#f0f9ff{% elif day < today %}#f7f7f7{% else %}white{% endif %};position:relative;">
+                    <div style="font-size:11px;font-weight:{% if day == today %}700{% else %}400{% endif %};color:{% if day == today %}#111{% elif day < today %}#ccc{% else %}#999{% endif %};margin-bottom:2px;display:flex;align-items:center;gap:4px;">
                         {{ day.day }}
                         {% if day == today %}
                         <span style="font-size:9px;color:#555;font-weight:400;">Today</span>
@@ -56,11 +117,11 @@
                     {% endfor %}
                     {% endfor %}
 
-                    {% if selected_listing and day < today %}
-                    <div style="display:flex;align-items:center;color:#bbb;font-size:9px;gap:4px;margin-bottom:2px;">
-                        <div style="flex:1;height:1px;background:#e0e0e0;"></div>
+                    {% if selected_listing and day not in booked_days %}
+                    <div style="display:flex;align-items:center;color:#999;font-size:9px;gap:4px;">
+                        <div style="flex:1;height:1px;background:#555558;"></div>
                         <span>day off</span>
-                        <div style="flex:1;height:1px;background:#e0e0e0;"></div>
+                        <div style="flex:1;height:1px;background:#555558;"></div>
                     </div>
                     {% endif %}
                 </div>
@@ -71,6 +132,8 @@
             </div>
             {% endfor %}
         </div>
+
+    </div>
 
     </div>
 
