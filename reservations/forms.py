@@ -25,13 +25,18 @@ class ListingForm(forms.ModelForm):
 
 
 class ReservationForm(forms.ModelForm):
+    listing = forms.ModelChoiceField(
+        queryset=Listing.objects.all(),
+        empty_label="Select a room...",
+        widget=forms.Select(attrs={
+            'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
+        })
+    )
+
     class Meta:
         model = Reservation
         fields = ['listing', 'guest_name', 'guest_photo', 'checkin_date', 'checkout_date', 'price_per_night']
         widgets = {
-            'listing': forms.Select(attrs={
-                'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
-            }),
             'guest_name': forms.TextInput(attrs={
                 'placeholder': 'Guest full name',
                 'style': 'width:100%; padding:10px 14px; background:white; border:1.5px solid #e0e0e0; border-radius:8px; color:#333; font-size:14px; outline:none; box-sizing:border-box;'
