@@ -6,50 +6,50 @@
 
     {% include 'reservations/partials/sidebar.html' %}
 
-    <div style="flex:1;padding:28px 36px;overflow-y:auto;background:#f8f8f8;">
+    <div style="flex:1;display:flex;flex-direction:column;padding:16px 24px 12px;overflow:hidden;background:#f8f8f8;">
 
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-            <h2 style="font-size:26px;font-weight:600;color:#222;margin:0;flex:1;">{{ month_name }}</h2>
-            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ prev_month }}&year={{ prev_year }}" style="width:32px;height:32px;border-radius:50%;background:white;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#555;font-size:16px;">&#8249;</a>
-            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ next_month }}&year={{ next_year }}" style="width:32px;height:32px;border-radius:50%;background:white;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#555;font-size:16px;">&#8250;</a>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0;">
+            <h2 style="font-size:18px;font-weight:600;color:#222;margin:0;flex:1;">{{ month_name }}</h2>
+            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ prev_month }}&year={{ prev_year }}" style="width:28px;height:28px;border-radius:50%;background:white;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#555;font-size:14px;">&#8249;</a>
+            <a href="/?{% if selected_listing %}listing_id={{ selected_listing.id }}&{% endif %}month={{ next_month }}&year={{ next_year }}" style="width:28px;height:28px;border-radius:50%;background:white;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#555;font-size:14px;">&#8250;</a>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:0;">
-            <div style="padding:8px 0;font-size:13px;font-weight:500;color:#999;text-align:left;padding-left:12px;border-bottom:1px solid #e0e0e0;">Su</div>
-            <div style="padding:8px 0;font-size:13px;font-weight:500;color:#999;text-align:left;padding-left:12px;border-bottom:1px solid #e0e0e0;">Mo</div>
-            <div style="padding:8px 0;font-size:13px;font-weight:500;color:#999;text-align:left;padding-left:12px;border-bottom:1px solid #e0e0e0;">Tu</div>
-            <div style="padding:8px 0;font-size:13px;font-weight:500;color:#999;text-align:left;padding-left:12px;border-bottom:1px solid #e0e0e0;">We</div>
-            <div style="padding:8px 0;font-size:13px;font-weight:500;color:#999;text-align:left;padding-left:12px;border-bottom:1px solid #e0e0e0;">Th</div>
-            <div style="padding:8px 0;font-size:13px;font-weight:500;color:#999;text-align:left;padding-left:12px;border-bottom:1px solid #e0e0e0;">Fr</div>
-            <div style="padding:8px 0;font-size:13px;font-weight:500;color:#999;text-align:left;padding-left:12px;border-bottom:1px solid #e0e0e0;">Sa</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);flex-shrink:0;">
+            <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Su</div>
+            <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Mo</div>
+            <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Tu</div>
+            <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">We</div>
+            <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Th</div>
+            <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Fr</div>
+            <div style="padding:4px 0 4px 8px;font-size:11px;font-weight:500;color:#999;text-align:left;border-bottom:1px solid #e0e0e0;">Sa</div>
         </div>
 
-        <div style="border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <div style="flex:1;display:flex;flex-direction:column;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
             {% for week in weeks %}
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #f0f0f0;">
+            <div style="flex:1;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #f0f0f0;min-height:0;">
                 {% for day in week %}
                 {% if day.month == month %}
-                <div style="min-height:100px;padding:8px 10px;border-right:1px solid #f0f0f0;background:{% if day == today %}#f0f9ff{% else %}white{% endif %};vertical-align:top;position:relative;">
-                    <div style="font-size:13px;font-weight:{% if day == today %}700{% else %}400{% endif %};color:{% if day == today %}#111{% else %}#999{% endif %};margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+                <div style="overflow:hidden;padding:3px 6px;border-right:1px solid #f0f0f0;background:{% if day == today %}#f0f9ff{% else %}white{% endif %};position:relative;">
+                    <div style="font-size:11px;font-weight:{% if day == today %}700{% else %}400{% endif %};color:{% if day == today %}#111{% else %}#999{% endif %};margin-bottom:2px;display:flex;align-items:center;gap:4px;">
                         {{ day.day }}
                         {% if day == today %}
-                        <span style="font-size:11px;color:#555;font-weight:400;">Today</span>
+                        <span style="font-size:9px;color:#555;font-weight:400;">Today</span>
                         {% endif %}
                     </div>
                     {% for item in listings_with_reservations %}
                     {% for res in item.reservations %}
                     {% if res.checkin_date <= day and res.checkout_date > day %}
-                    <div style="display:flex;align-items:center;background:#5bc8c8;border-radius:20px;padding:4px 10px 4px 4px;margin-bottom:4px;gap:6px;overflow:hidden;max-width:100%;">
+                    <div style="display:flex;align-items:center;background:#5bc8c8;border-radius:20px;padding:1px 6px 1px 2px;margin-bottom:2px;gap:4px;overflow:hidden;max-width:100%;">
                         {% if res.guest_photo %}
-                        <img src="{{ res.guest_photo.url }}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.5);">
+                        <img src="{{ res.guest_photo.url }}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.5);">
                         {% else %}
-                        <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">{{ res.guest_name|first|upper }}</div>
+                        <div style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;flex-shrink:0;">{{ res.guest_name|first|upper }}</div>
                         {% endif %}
-                        <span style="font-size:12px;color:white;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ res.guest_name }}</span>
+                        <span style="font-size:10px;color:white;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ res.guest_name }}</span>
                     </div>
                     {% endif %}
                     {% if res.checkout_date == day and res.price_per_night %}
-                    <div style="position:absolute;bottom:6px;right:8px;font-size:11px;color:#aaa;font-weight:500;">
+                    <div style="position:absolute;bottom:2px;right:6px;font-size:9px;color:#aaa;font-weight:500;">
                         ${{ res.price_per_night }}
                     </div>
                     {% endif %}
@@ -57,7 +57,7 @@
                     {% endfor %}
 
                     {% if selected_listing and day < today %}
-                    <div style="display:flex;align-items:center;color:#bbb;font-size:11px;gap:6px;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;color:#bbb;font-size:9px;gap:4px;margin-bottom:2px;">
                         <div style="flex:1;height:1px;background:#e0e0e0;"></div>
                         <span>day off</span>
                         <div style="flex:1;height:1px;background:#e0e0e0;"></div>
@@ -65,7 +65,7 @@
                     {% endif %}
                 </div>
                 {% else %}
-                <div style="min-height:100px;background:#fafafa;border-right:1px solid #f0f0f0;"></div>
+                <div style="background:#fafafa;border-right:1px solid #f0f0f0;"></div>
                 {% endif %}
                 {% endfor %}
             </div>
