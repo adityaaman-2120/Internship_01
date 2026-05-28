@@ -2,21 +2,26 @@
 {% block title %}Delete Listing{% endblock %}
 {% block content %}
 
-<div style="max-width:440px;margin:80px auto;background:#1e1e2e;border-radius:16px;padding:36px;border:1px solid #2a2a3e;">
+<div style="max-width:420px;margin:60px auto;background:white;border-radius:12px;padding:36px;border:1px solid #e8e8e8;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
 
-    <div style="font-size:40px;color:#ffb347;text-align:center;">&#9888;&#65039;</div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+    </div>
 
-    <h1 style="color:#fff;font-size:20px;font-weight:600;text-align:center;margin:16px 0 8px;">Delete Listing?</h1>
+    <h1 style="color:#1a1a1a;font-size:20px;font-weight:600;text-align:center;margin:20px 0 8px;">Delete Listing?</h1>
 
-    <p style="color:#aaa;font-size:14px;text-align:center;margin:0 0 24px;">
-        Are you sure you want to delete '{{ listing.room_title }}'? This will also delete ALL reservations linked to this listing. This action cannot be undone.
+    <p style="color:#666;font-size:14px;text-align:center;margin:0 0 28px;line-height:1.5;">
+        Are you sure you want to delete <strong style="color:#1a1a1a;">{{ listing.room_title }}</strong>? This will also delete all reservations linked to this listing. This action cannot be undone.
     </p>
 
     <div style="display:flex;gap:12px;justify-content:center;">
-        <a href="/listings/" style="background:#2a2a3e;color:#fff;border-radius:8px;padding:10px 24px;text-decoration:none;font-size:14px;">Cancel</a>
+        <a href="/listings/" style="background:white;color:#555;border:1px solid #e0e0e0;border-radius:8px;padding:10px 24px;text-decoration:none;font-size:14px;font-weight:500;transition:background 0.15s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">Cancel</a>
         <form method="POST" action="/listings/{{ listing.pk }}/delete/" style="display:inline;">
             {% csrf_token %}
-            <button type="submit" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Yes, Delete</button>
+            <button type="submit" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:500;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">Yes, Delete</button>
         </form>
     </div>
 

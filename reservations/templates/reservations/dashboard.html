@@ -1,6 +1,33 @@
 {% extends 'reservations/base.html' %}
 {% block title %}Dashboard — {{ month_name }}{% endblock %}
 {% block content %}
+<style>
+/* Horizontal row-separator lines must sit ABOVE spanning cards (z-index:4).
+   Cards are absolutely positioned inside their anchor cell.
+   #cal-grid has overflow:hidden which creates a stacking context,
+   so the card's z-index:4 applies within that context and covers sibling
+   cells' border-bottom. We redraw the line via ::after at z-index:6. */
+.cal-week-row {
+    position: relative;
+}
+.cal-week-row::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: #a8a8a8;
+    z-index: 6;
+    pointer-events: none;
+}
+/* Remove the individual cell border-bottom so there's no double-line;
+   the ::after on the row handles the horizontal separator. */
+.cal-day {
+    border-bottom: none !important;
+}
+</style>
+
 
 <div style="display:flex;flex-direction:column;height:calc(100vh - 56px);overflow:hidden;background:#f8f8f8;">
 
@@ -94,52 +121,55 @@
         <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
 
         <div style="display:grid;grid-template-columns:repeat(7,1fr);flex-shrink:0;padding:0 24px;">
-            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #d0d0d0;">Su</div>
-            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #d0d0d0;">Mo</div>
-            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #d0d0d0;">Tu</div>
-            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #d0d0d0;">We</div>
-            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #d0d0d0;">Th</div>
-            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #d0d0d0;">Fr</div>
-            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #d0d0d0;">Sa</div>
+            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #a8a8a8;">Su</div>
+            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #a8a8a8;">Mo</div>
+            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #a8a8a8;">Tu</div>
+            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #a8a8a8;">We</div>
+            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #a8a8a8;">Th</div>
+            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #a8a8a8;">Fr</div>
+            <div style="padding:5px 0 5px 8px;font-size:12px;font-weight:700;color:#666;text-align:left;border-bottom:2px solid #a8a8a8;">Sa</div>
         </div>
 
-        <div style="flex:1;display:flex;flex-direction:column;margin:0 24px 12px;border:2px solid #d0d0d0;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <div id="cal-grid" style="flex:1;display:flex;flex-direction:column;margin:0 24px 12px;border:2px solid #a8a8a8;border-radius:12px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
             {% for week in weeks %}
-            <div style="flex:1;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid #d0d0d0;min-height:0;">
+            <div class="cal-week-row" style="flex:1;display:grid;grid-template-columns:repeat(7,1fr);min-height:72px;position:relative;">
                 {% for day in week %}
                 {% if day.month == month %}
-                <div style="padding:4px 6px;border-right:1.5px solid #d0d0d0;background:{% if day == today %}#f0f9ff{% elif day < today %}#f7f7f7{% else %}white{% endif %};display:flex;flex-direction:column;min-height:72px;position:relative;" data-date="{{ day|date:'Y-m-d' }}">
+                <div class="cal-day" style="padding:4px 6px 20px 6px;border-right:1.5px solid #a8a8a8;border-bottom:1.5px solid #a8a8a8;background:{% if day == today %}#f0f9ff{% elif day < today %}#f7f7f7{% else %}white{% endif %};display:flex;flex-direction:column;min-height:72px;position:relative;" data-date="{{ day|date:'Y-m-d' }}" data-dow="{{ day|date:'w' }}">
                     <div style="font-size:12px;font-weight:{% if day == today %}800{% else %}600{% endif %};color:{% if day == today %}#111{% elif day < today %}#aaa{% else %}#555{% endif %};display:flex;align-items:center;gap:4px;flex-shrink:0;">
                         {{ day.day }}
                         {% if day == today %}
                         <span style="font-size:9px;color:#555;font-weight:400;">Today</span>
                         {% endif %}
                     </div>
-                    <div class="pill-container" style="flex:1;display:flex;flex-direction:column;gap:2px;overflow:hidden;margin-top:2px;">
-                        {% for item in listings_with_reservations %}
-                        {% for res in item.reservations %}
-                        {% if res.checkin_date <= day and res.checkout_date > day %}
-                        <div class="reservation-pill" style="display:flex;align-items:center;gap:3px;padding:1px 4px;border-radius:4px;background:{% if res.checkout_date <= today %}#9dd5d5{% elif res.checkin_date > today %}#3a8a8a{% else %}#5bc8c8{% endif %};height:18px;overflow:hidden;flex-shrink:0;" title="{{ res.guest_name }} ({{ res.checkin_date }} - {{ res.checkout_date }})">
-                            {% if res.checkin_date == day %}
-                            {% if res.guest_photo %}
-                            <img src="{{ res.guest_photo.url }}" style="width:12px;height:12px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.5);">
-                            {% else %}
-                            <div style="width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;flex-shrink:0;">{{ res.guest_name|first|upper }}</div>
-                            {% endif %}
-                            <span style="font-size:9px;color:white;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ res.guest_name }}</span>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                        {% endfor %}
-                        {% endfor %}
-                        <div class="more-indicator" style="display:none;font-size:10px;color:#888;text-align:right;font-weight:700;padding:0 2px;margin-top:-2px;cursor:pointer;" onclick="event.stopPropagation();openDayModal(this.closest('[data-date]').getAttribute('data-date'));"></div>
-                    </div>
+                    <!-- Spanning reservation cards are injected here by JS -->
+                    {% for item in listings_with_reservations %}
+                    {% for res in item.reservations %}
+                    {% if res.checkin_date == day %}
+                    <!-- CARD ANCHOR: rendered only on checkin day, JS will compute width -->
+                    <div class="res-span-card"
+                        data-checkin="{{ res.checkin_date|date:'Y-m-d' }}"
+                        data-checkout="{{ res.checkout_date|date:'Y-m-d' }}"
+                        data-nights="{{ res.nights }}"
+                        data-guest="{{ res.guest_name }}"
+                        data-color="{% if res.checkout_date <= today %}#9dd5d5{% elif res.checkin_date > today %}#3a8a8a{% else %}#5bc8c8{% endif %}"
+                        data-photo="{% if res.guest_photo %}{{ res.guest_photo.url }}{% endif %}"
+                        data-initial="{{ res.guest_name|first|upper }}"
+                        data-res-id="{{ res.id }}"
+                        data-price="{% if res.price_per_night %}{{ res.price_per_night }}{% endif %}"
+                        title="{{ res.guest_name }} ({{ res.checkin_date }} → {{ res.checkout_date }}, {{ res.nights }} night{{ res.nights|pluralize }})"
+                        style="display:none;"
+                    ></div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endfor %}
+                    <div class="more-indicator" style="display:none;position:absolute;bottom:3px;right:5px;font-size:10px;color:#888;font-weight:700;cursor:pointer;z-index:10;" onclick="event.stopPropagation();openDayModal(this.closest('[data-date]').getAttribute('data-date'));"></div>
                     <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:14px;">
                         {% if selected_listing and day not in booked_days %}
                         <div style="flex:1;display:flex;align-items:center;gap:4px;">
-                            <div style="flex:1;height:1px;background:#d0d0d0;"></div>
+                            <div style="flex:1;height:1px;background:#a8a8a8;"></div>
                             <span style="color:#bbb;font-size:9px;">day off</span>
-                            <div style="flex:1;height:1px;background:#d0d0d0;"></div>
+                            <div style="flex:1;height:1px;background:#a8a8a8;"></div>
                         </div>
                         {% else %}
                         <span></span>
@@ -147,14 +177,14 @@
                         {% for item in listings_with_reservations %}
                         {% for res in item.reservations %}
                         {% if res.checkout_date == day and res.price_per_night %}
-                        <span style="font-size:9px;color:#888;font-weight:600;flex-shrink:0;">${{ res.price_per_night }}</span>
+                        <span style="font-size:9px;color:#888;font-weight:600;flex-shrink:0;position:absolute;bottom:3px;left:6px;">${{ res.price_per_night }}</span>
                         {% endif %}
                         {% endfor %}
                         {% endfor %}
                     </div>
                 </div>
                 {% else %}
-                <div style="background:#fafafa;border-right:1px solid #f0f0f0;"></div>
+                <div style="background:#fafafa;border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;"></div>
                 {% endif %}
                 {% endfor %}
             </div>
@@ -291,20 +321,23 @@ document.addEventListener('DOMContentLoaded', function() {
     var cells = document.querySelectorAll('[data-date]');
     var selected = null;
     var overlay = null;
+
+    // Click to open modal
     cells.forEach(function(cell) {
         if (cell.getAttribute('data-date') === today) {
             var div = document.createElement('div');
-            div.style.cssText = 'position:absolute;inset:-1px;z-index:5;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
+            div.style.cssText = 'position:absolute;inset:0;z-index:5;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
             cell.appendChild(div);
             selected = cell;
             overlay = div;
         }
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', function(e) {
+            if (e.target.closest('.res-span-rendered')) return; // let card handle its own click
             var dateStr = this.getAttribute('data-date');
             if (selected && overlay) overlay.remove();
             var div = document.createElement('div');
-            div.style.cssText = 'position:absolute;inset:-1px;z-index:5;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
+            div.style.cssText = 'position:absolute;inset:0;z-index:5;pointer-events:none;border:2px solid #4a90d9;border-radius:4px;';
             this.appendChild(div);
             selected = this;
             overlay = div;
@@ -312,23 +345,226 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Cap visible pills at 2 per cell, show +N more indicator
-    cells.forEach(function(cell) {
-        var dateStr = cell.getAttribute('data-date');
-        var pills = cell.querySelectorAll('.reservation-pill');
-        var total = (reservationsData[dateStr] || []).length;
-        var moreEl = cell.querySelector('.more-indicator');
-        if (total > 2) {
-            for (var i = 2; i < pills.length; i++) {
-                pills[i].style.display = 'none';
+    // ── Spanning card renderer ──────────────────────────────────────────────
+    function renderSpanningCards() {
+        // Build a lookup: date-string → DOM cell
+        var cellMap = {};
+        cells.forEach(function(cell) {
+            cellMap[cell.getAttribute('data-date')] = cell;
+        });
+
+        // Collect all anchor elements (hidden data holders)
+        var anchors = document.querySelectorAll('.res-span-card');
+        // Track per-cell slot usage (how many rows of cards are in each cell)
+        var slotMap = {}; // date -> count of cards placed
+        var MAX_SLOTS = 2;
+
+        anchors.forEach(function(anchor) {
+            var checkin  = anchor.dataset.checkin;
+            var checkout = anchor.dataset.checkout;
+            var nights   = parseInt(anchor.dataset.nights) || 1;
+            var guest    = anchor.dataset.guest;
+            var color    = anchor.dataset.color;
+            var photo    = anchor.dataset.photo;
+            var initial  = anchor.dataset.initial;
+            var resId    = anchor.dataset.resId;
+            var price    = anchor.dataset.price;
+
+            // Parse dates
+            function parseDate(s) {
+                var p = s.split('-');
+                return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
             }
-            if (moreEl) {
-                moreEl.textContent = '+' + (total - 2);
-                moreEl.style.display = 'block';
+            function dateStr(d) {
+                var mm = String(d.getMonth()+1).padStart(2,'0');
+                var dd = String(d.getDate()).padStart(2,'0');
+                return d.getFullYear() + '-' + mm + '-' + dd;
             }
-        } else if (moreEl) {
-            moreEl.style.display = 'none';
-        }
+            function addDays(d, n) {
+                var r = new Date(d); r.setDate(r.getDate()+n); return r;
+            }
+
+            var ciDate  = parseDate(checkin);
+            var coDate  = parseDate(checkout);
+
+            // Find all cells this reservation touches, grouped by week row
+            // We'll segment per week row
+            var current = new Date(ciDate);
+            var segmentStart = new Date(ciDate);
+            var isFirstSegment = true;
+
+            while (current < coDate) {
+                var curStr = dateStr(current);
+                var curCell = cellMap[curStr];
+
+                // Check if we're at end of week row (Saturday = dow 6) or at checkout
+                var nextDay = addDays(current, 1);
+                var nextStr = dateStr(nextDay);
+                var dow = current.getDay(); // 0=Sun, 6=Sat
+                var isLastInRow = (dow === 6);
+                var isLastNight = (nextDay >= coDate);
+                var isSegmentEnd = isLastInRow || isLastNight;
+
+                if (isSegmentEnd && curCell) {
+                    // Render a card from segmentStart to current (inclusive)
+                    var segStartStr = dateStr(segmentStart);
+                    var segStartCell = cellMap[segStartStr];
+                    if (!segStartCell) {
+                        // segmentStart might be out of month — skip
+                        current = nextDay;
+                        segmentStart = nextDay;
+                        isFirstSegment = false;
+                        continue;
+                    }
+
+                    // Count how many cells in this segment
+                    var segCount = 0;
+                    var tmp = new Date(segmentStart);
+                    while (tmp <= current) {
+                        segCount++;
+                        tmp = addDays(tmp, 1);
+                    }
+
+                    // Find the slot index for this card in the start cell
+                    if (!slotMap[segStartStr]) slotMap[segStartStr] = 0;
+                    var slot = slotMap[segStartStr];
+
+                    if (slot < MAX_SLOTS) {
+                        // Reserve slot in all cells this segment covers
+                        var tc = new Date(segmentStart);
+                        while (tc <= current) {
+                            var tcs = dateStr(tc);
+                            if (!slotMap[tcs]) slotMap[tcs] = 0;
+                            if (slotMap[tcs] <= slot) slotMap[tcs] = slot + 1;
+                            tc = addDays(tc, 1);
+                        }
+
+                        // Build the card element
+                        var card = document.createElement('div');
+                        card.className = 'res-span-rendered';
+
+                        // Determine rounding
+                        var isCheckinSeg = isFirstSegment;
+                        var isCheckoutSeg = isLastNight;
+                        // Span across segCount cells
+                        // We'll set width via inline style referencing cell widths
+                        var startRect = segStartCell.getBoundingClientRect();
+                        var endRect   = curCell.getBoundingClientRect();
+                        var spanWidth = (endRect.right - startRect.left) - 6; // small gap
+
+                        // Border radius based on segment position
+                        var br = '';
+                        if (isCheckinSeg && isCheckoutSeg) {
+                            br = '10px'; // full pill both sides
+                        } else if (isCheckinSeg) {
+                            br = '10px 0 0 10px'; // rounded left only
+                        } else if (isCheckoutSeg) {
+                            br = '0 10px 10px 0'; // rounded right only
+                        } else {
+                            br = '0'; // flat bar in middle of multi-week
+                        }
+
+                        var TOP_OFFSET = 22; // px from top of cell (below date number)
+                        var CARD_H     = 22;
+                        var CARD_GAP   = 3;
+                        var topPx      = TOP_OFFSET + slot * (CARD_H + CARD_GAP);
+
+                        card.style.cssText = [
+                            'position:absolute',
+                            'top:' + topPx + 'px',
+                            'left:3px',
+                            'height:' + CARD_H + 'px',
+                            'width:' + spanWidth + 'px',
+                            'background:' + color,
+                            'border-radius:' + br,
+                            'display:flex',
+                            'align-items:center',
+                            'padding:0 7px',
+                            'z-index:4',
+                            'overflow:hidden',
+                            'white-space:nowrap',
+                            'cursor:pointer',
+                            'box-shadow:0 1px 4px rgba(0,0,0,0.13)',
+                            'transition:filter 0.15s'
+                        ].join(';');
+
+                        card.dataset.resId = resId;
+                        card.onmouseover = function() { this.style.filter = 'brightness(1.08)'; };
+                        card.onmouseout  = function() { this.style.filter = ''; };
+                        card.onclick     = function(e) {
+                            e.stopPropagation();
+                            window.location = '/reservations/' + this.dataset.resId + '/edit/';
+                        };
+
+                        // Avatar
+                        if (photo) {
+                            var img = document.createElement('img');
+                            img.src = photo;
+                            img.style.cssText = 'width:14px;height:14px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.5);margin-right:4px;';
+                            card.appendChild(img);
+                        } else {
+                            var av = document.createElement('div');
+                            av.style.cssText = 'width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;margin-right:4px;';
+                            av.textContent = initial;
+                            card.appendChild(av);
+                        }
+
+                        // Name label — only show if segment is wide enough and it's first segment
+                        if (isCheckinSeg || (!isCheckinSeg && segCount >= 2)) {
+                            var nm = document.createElement('span');
+                            nm.style.cssText = 'font-size:10px;color:white;font-weight:500;overflow:hidden;text-overflow:ellipsis;';
+                            nm.textContent = guest;
+                            card.appendChild(nm);
+                        }
+
+                        // Checkout tail line on right end if this is checkout segment
+                        if (isCheckoutSeg && !isCheckinSeg) {
+                            // Add a subtle end-cap indicator (small vertical bar)
+                            var endCap = document.createElement('div');
+                            endCap.style.cssText = 'position:absolute;right:0;top:0;bottom:0;width:4px;background:rgba(0,0,0,0.12);border-radius:0 10px 10px 0;';
+                            card.appendChild(endCap);
+                        }
+
+                        segStartCell.appendChild(card);
+                    } else {
+                        // Overflow: show +more in each cell of this segment
+                        var tc2 = new Date(segmentStart);
+                        while (tc2 <= current) {
+                            var tcs2 = dateStr(tc2);
+                            var overCell = cellMap[tcs2];
+                            if (overCell) {
+                                var moreEl = overCell.querySelector('.more-indicator');
+                                if (moreEl) {
+                                    var cur = parseInt(moreEl.dataset.extra || '0') + 1;
+                                    moreEl.dataset.extra = cur;
+                                    moreEl.textContent = '+' + cur;
+                                    moreEl.style.display = 'block';
+                                }
+                            }
+                            tc2 = addDays(tc2, 1);
+                        }
+                    }
+
+                    // Advance to next segment
+                    current = nextDay;
+                    segmentStart = nextDay;
+                    isFirstSegment = false;
+                } else {
+                    current = nextDay;
+                }
+            }
+        });
+    }
+
+    // Run once after layout
+    renderSpanningCards();
+    // Re-run on resize so widths stay correct
+    window.addEventListener('resize', function() {
+        document.querySelectorAll('.res-span-rendered').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('.more-indicator').forEach(function(el) {
+            el.style.display = 'none'; el.textContent = ''; el.dataset.extra = '0';
+        });
+        renderSpanningCards();
     });
 });
 
