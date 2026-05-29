@@ -25,7 +25,7 @@
 | **📊 Occupancy Stats** | Per-month breakdown with bookings, available rooms, and occupancy % across 3 week-groups |
 | **🔍 Listing Filtering** | Click any listing to focus on its availability; search listings by name |
 | **📸 Image Uploads** | Room photos and guest photos via Django media handling |
-| **📱 Responsive UI** | Inline-styled professional interface with hover effects and interactive elements |
+| **🖱️ Drag-to-Book** | Click & drag horizontally on the Calendar timeline to auto-fill the reservation form with listing and date range |
 | **🌐 JSON API** | RESTful endpoints for listings and reservations data |
 
 ---
@@ -112,6 +112,7 @@ The default view at `/` shows a month-grid calendar. Each day cell displays:
 - Price-per-night on checkout dates
 - Click any day cell to open a **popup modal** showing all reservations for that day, with guest details, room info, status badges, date ranges, pricing, and quick Edit/View Room actions
 - The modal also provides a direct link to add a new reservation for that date
+- Reservation spanning cards start at the **middle of the check-in day** and end at the **middle of the check-out day** for a precise visual date range; multi-week reservations render as seamless row-spanning segments
 
 ### Timeline View
 Navigate to `/calendar/` for a horizontal timeline:
@@ -120,6 +121,7 @@ Navigate to `/calendar/` for a horizontal timeline:
 - Click any reservation bar to edit it
 - Search listings by name
 - **Stats dropdown** — click the bar chart icon to view bookings, available rooms, and occupancy % split into 3 periods per month
+- **Drag-to-book** — click and drag horizontally across any listing's day cells to open the reservation form with listing, check-in, and check-out pre-filled
 
 ### Listings
 - `/listings/` — Grid of all rental properties with images
