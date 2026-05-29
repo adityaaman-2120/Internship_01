@@ -1,4 +1,10 @@
-const BASE_URL = 'http://10.90.212.156:8000';
+// ── Toggle this for remote testing ──────────────────────────────────────────
+// Set USE_TUNNEL=true and paste your ngrok URL below when sharing with remote users.
+// Revert USE_TUNNEL=false when back to local development.
+const USE_TUNNEL = false;
+const TUNNEL_URL = 'https://cf7f29b309cceb.lhr.life';
+const LOCAL_URL = 'http://10.90.212.156:8000';
+const BASE_URL = USE_TUNNEL ? TUNNEL_URL : LOCAL_URL;
 
 export const API = {
   base: BASE_URL,
