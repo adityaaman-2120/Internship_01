@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "FavHost",
+    "slug": "favhost-app",
+    "scheme": "favhost",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": { "resizeMode": "contain", "backgroundColor": "#ffffff" },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.favhost.app" },
+    "android": { "adaptiveIcon": { "backgroundColor": "#ffffff" }, "package": "com.favhost.app" },
+    "plugins": [
+      "expo-router",
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}

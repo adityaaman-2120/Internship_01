@@ -365,3 +365,96 @@ def api_reservations(request):
             'nights': r.nights,
         })
     return JsonResponse({'reservations': data})
+
+
+def api_listing_detail(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    data = {
+        'id': listing.id,
+        'room_title': listing.room_title,
+        'image_url': listing.room_image.url if listing.room_image else None,
+        'reservation_count': listing.reservations.count(),
+    }
+    return JsonResponse(data)
+
+
+def api_reservation_detail(request, pk):
+    res = get_object_or_404(Reservation, pk=pk)
+    data = {
+        'id': res.id,
+        'listing_id': res.listing.id,
+        'listing_title': res.listing.room_title,
+        'guest_name': res.guest_name,
+        'guest_photo_url': res.guest_photo.url if res.guest_photo else None,
+        'checkin_date': res.checkin_date.isoformat(),
+        'checkout_date': res.checkout_date.isoformat(),
+        'nights': res.nights,
+        'price_per_night': str(res.price_per_night) if res.price_per_night else None,
+    }
+    return JsonResponse(data)
+
+
+def api_listing_create(request):
+    if request.method == 'POST':
+        form = ListingForm(request.POST, request.FILES)
+        if form.is_valid():
+            listing = form.save()
+            return JsonResponse({'id': listing.id, 'room_title': listing.room_title}, status=201)
+        return JsonResponse({'errors': form.errors}, status=400)
+    return JsonResponse({'error': 'POST required'}, status=405)
+
+
+def api_listing_update(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    if request.method == 'POST':
+        form = ListingForm(request.POST, request.FILES, instance=listing)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'id': listing.id, 'room_title': listing.room_title})
+        return JsonResponse({'errors': form.errors}, status=400)
+
+
+def api_listing_delete(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    if request.method == 'POST':
+        listing.delete()
+        return JsonResponse({'deleted': True})
+
+
+def api_reservation_create(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        try:
+            import datetime
+            res = Reservation.objects.create(
+                listing_id=data['listing_id'],
+                guest_name=data['guest_name'],
+                checkin_date=datetime.date.fromisoformat(data['checkin_date']),
+                checkout_date=datetime.date.fromisoformat(data['checkout_date']),
+                price_per_night=data.get('price_per_night'),
+            )
+            return JsonResponse({'id': res.id}, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+
+def api_reservation_update(request, pk):
+    res = get_object_or_404(Reservation, pk=pk)
+    if request.method == 'POST':
+        import json, datetime
+        data = json.loads(request.body)
+        res.listing_id = data.get('listing_id', res.listing_id)
+        res.guest_name = data.get('guest_name', res.guest_name)
+        res.checkin_date = datetime.date.fromisoformat(data['checkin_date'])
+        res.checkout_date = datetime.date.fromisoformat(data['checkout_date'])
+        res.price_per_night = data.get('price_per_night', res.price_per_night)
+        res.save()
+        return JsonResponse({'id': res.id})
+
+
+def api_reservation_delete(request, pk):
+    res = get_object_or_404(Reservation, pk=pk)
+    if request.method == 'POST':
+        res.delete()
+        return JsonResponse({'deleted': True})

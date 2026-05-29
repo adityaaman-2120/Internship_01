@@ -15,5 +15,13 @@ urlpatterns = [
     path("reservations/<int:pk>/edit/", views.reservation_edit, name="reservation_edit"),
     path("reservations/<int:pk>/delete/", views.reservation_delete, name="reservation_delete"),
     path("api/listings/", views.api_listings, name="api_listings"),
+    path("api/listings/create/", views.api_listing_create, name="api_listing_create"),
+    path("api/listings/<int:pk>/", views.api_listing_detail, name="api_listing_detail"),
+    path("api/listings/<int:pk>/update/", views.api_listing_update, name="api_listing_update"),
+    path("api/listings/<int:pk>/delete/", views.api_listing_delete, name="api_listing_delete"),
     path("api/reservations/", views.api_reservations, name="api_reservations"),
+    path("api/reservations/create/", views.api_reservation_create, name="api_reservation_create"),
+    path("api/reservations/<int:pk>/", views.api_reservation_detail, name="api_reservation_detail"),
+    path("api/reservations/<int:pk>/update/", views.api_reservation_update, name="api_reservation_update"),
+    path("api/reservations/<int:pk>/delete/", views.api_reservation_delete, name="api_reservation_delete"),
 ]
