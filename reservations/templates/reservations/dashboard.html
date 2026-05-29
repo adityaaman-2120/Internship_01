@@ -450,7 +450,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         // We'll set width via inline style referencing cell widths
                         var startRect = segStartCell.getBoundingClientRect();
                         var endRect   = curCell.getBoundingClientRect();
-                        var spanWidth = (endRect.right - startRect.left) - 6; // small gap
+                        var colWidth  = startRect.width;
+                        var spanWidth = (endRect.right - startRect.left) - 6
+                            - (isCheckinSeg && !isCheckoutSeg ? colWidth / 2 : 0)
+                            + (!isCheckinSeg && isCheckoutSeg ? colWidth / 2 : 0);
 
                         // Border radius based on segment position
                         var br = '';
@@ -469,10 +472,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         var CARD_GAP   = 3;
                         var topPx      = TOP_OFFSET + slot * (CARD_H + CARD_GAP);
 
+                        var leftOffset = isCheckinSeg ? 3 + colWidth / 2 : 3;
                         card.style.cssText = [
                             'position:absolute',
                             'top:' + topPx + 'px',
-                            'left:3px',
+                            'left:' + leftOffset + 'px',
                             'height:' + CARD_H + 'px',
                             'width:' + spanWidth + 'px',
                             'background:' + color,
@@ -496,27 +500,24 @@ document.addEventListener('DOMContentLoaded', function() {
                             window.location = '/reservations/' + this.dataset.resId + '/edit/';
                         };
 
-                        // Avatar
-                        if (photo) {
-                            var img = document.createElement('img');
-                            img.src = photo;
-                            img.style.cssText = 'width:14px;height:14px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.5);margin-right:4px;';
-                            card.appendChild(img);
-                        } else {
-                            var av = document.createElement('div');
-                            av.style.cssText = 'width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;margin-right:4px;';
-                            av.textContent = initial;
-                            card.appendChild(av);
-                        }
-
-                        // Name label — only show if segment is wide enough and it's first segment
-                        if (isCheckinSeg || (!isCheckinSeg && segCount >= 2)) {
+                        // Avatar & name — only on the first segment
+                        if (isCheckinSeg) {
+                            if (photo) {
+                                var img = document.createElement('img');
+                                img.src = photo;
+                                img.style.cssText = 'width:14px;height:14px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.5);margin-right:4px;';
+                                card.appendChild(img);
+                            } else {
+                                var av = document.createElement('div');
+                                av.style.cssText = 'width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.3);color:white;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;margin-right:4px;';
+                                av.textContent = initial;
+                                card.appendChild(av);
+                            }
                             var nm = document.createElement('span');
                             nm.style.cssText = 'font-size:10px;color:white;font-weight:500;overflow:hidden;text-overflow:ellipsis;';
                             nm.textContent = guest;
                             card.appendChild(nm);
                         }
-
                         // Checkout tail line on right end if this is checkout segment
                         if (isCheckoutSeg && !isCheckinSeg) {
                             // Add a subtle end-cap indicator (small vertical bar)

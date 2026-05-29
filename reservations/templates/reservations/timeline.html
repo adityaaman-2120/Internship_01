@@ -1,6 +1,14 @@
 {% extends 'reservations/base.html' %}
 {% block title %}Calendar — Timeline View{% endblock %}
 {% block content %}
+<style>
+.timeline-day-cell {
+    user-select: none;
+}
+.drag-highlight {
+    background: #bfdbfe !important;
+}
+</style>
 
 <div style="display:flex;flex-direction:column;height:calc(100vh - 56px);overflow:hidden;background:#f8f8f8;">
 
@@ -228,7 +236,9 @@
             </div>
 
             {% for day in calendar_days %}
-            <div
+            <div class="timeline-day-cell"
+                data-date="{{ day|date:'Y-m-d' }}"
+                data-listing-id="{{ item.listing.id }}"
                 style="grid-column:{{ forloop.counter|add:1 }};grid-row:{{ forloop.parentloop.counter|add:1 }};border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;height:40px;position:relative;background:{% if day == today %}#f0f9ff{% else %}white{% endif %};">
                 {% for res in item.reservations %}
                 {% if res.checkin_date == day %}
@@ -291,6 +301,83 @@
 
     document.addEventListener('DOMContentLoaded', resizeBars);
     window.addEventListener('resize', resizeBars);
+
+    // ── Drag-to-select date range ────────────────────────────────────────
+    var dragStart = null;
+    var dragEnd = null;
+    var dragMoved = false;
+    var dragListingId = null;
+
+    function highlightDragRange(start, end, listingId) {
+        clearDragHighlight();
+        var startD = new Date(start);
+        var endD = new Date(end);
+        if (startD > endD) { var t = startD; startD = endD; endD = t; }
+        document.querySelectorAll('.timeline-day-cell').forEach(function(c) {
+            if (listingId && c.dataset.listingId !== listingId) return;
+            var cd = new Date(c.dataset.date);
+            if (cd >= startD && cd <= endD) {
+                if (!c.dataset.origBg) c.dataset.origBg = c.style.background || '';
+                c.style.background = '#bfdbfe';
+                c.classList.add('drag-highlight');
+            }
+        });
+    }
+
+    function clearDragHighlight() {
+        document.querySelectorAll('.drag-highlight').forEach(function(c) {
+            c.style.background = c.dataset.origBg || '';
+            delete c.dataset.origBg;
+            c.classList.remove('drag-highlight');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.timeline-day-cell').forEach(function(cell) {
+            cell.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                if (e.target.closest('.res-bar')) return;
+                dragStart = this.dataset.date;
+                dragEnd = dragStart;
+                dragMoved = false;
+                dragListingId = this.dataset.listingId;
+                highlightDragRange(dragStart, dragEnd, dragListingId);
+            });
+        });
+
+        document.addEventListener('mouseover', function(e) {
+            if (dragStart === null) return;
+            if ((e.buttons & 1) === 0) return;
+            var cell = e.target.closest('.timeline-day-cell');
+            if (!cell) return;
+            var date = cell.dataset.date;
+            if (date !== dragEnd) {
+                dragMoved = true;
+                dragEnd = date;
+                highlightDragRange(dragStart, dragEnd, dragListingId);
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (dragStart !== null && dragMoved) {
+                var dates = [dragStart, dragEnd].sort();
+                var checkin = dates[0];
+                var endDt = new Date(dates[1]);
+                endDt.setDate(endDt.getDate() + 1);
+                var checkout = endDt.getFullYear() + '-' +
+                    String(endDt.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(endDt.getDate()).padStart(2, '0');
+                var url = '/reservations/add/?checkin=' + checkin + '&checkout=' + checkout;
+                if (dragListingId) url += '&listing_id=' + dragListingId;
+                window.location.href = url;
+            }
+            dragStart = null;
+            dragEnd = null;
+            dragMoved = false;
+            dragListingId = null;
+            clearDragHighlight();
+        });
+    });
 
     function toggleStatsDropdown() {
         var dd = document.getElementById('statsDropdown');

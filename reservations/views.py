@@ -280,6 +280,12 @@ def reservation_add(request):
         listing_id = request.GET.get('listing_id')
         if listing_id:
             initial['listing'] = listing_id
+        checkin = request.GET.get('checkin')
+        if checkin:
+            initial['checkin_date'] = checkin
+        checkout = request.GET.get('checkout')
+        if checkout:
+            initial['checkout_date'] = checkout
         form = ReservationForm(initial=initial)
     return render(request, 'reservations/reservation_form.html', {
         'form': form,
