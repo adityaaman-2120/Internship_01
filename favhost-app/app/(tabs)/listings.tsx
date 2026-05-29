@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, Image, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, Image, StyleSheet, RefreshControl, Alert, useWindowDimensions } from 'react-native';
 import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../../components/Header';
@@ -52,38 +52,39 @@ export default function ListingsScreen() {
   return (
     <View style={styles.container}>
       <Header title="Listings" />
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color="#94a3b8" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search listings..."
-          placeholderTextColor="#94a3b8"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          clearButtonMode="while-editing"
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
-            <Ionicons name="close-circle" size={16} color="#cbd5e1" />
-          </TouchableOpacity>
-        )}
-      </View>
-      <FlatList
-        data={filteredListings}
-        keyExtractor={i => String(i.id)}
-        numColumns={2}
-        contentContainerStyle={styles.list}
-        columnWrapperStyle={styles.row}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true);fetchListings();}} tintColor="#1e293b" />}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name={searchQuery ? "search-outline" : "home-outline"} size={36} color="#ddd" />
-            <Text style={styles.emptyTitle}>{searchQuery ? 'No listings match your search' : 'No listings yet'}</Text>
-            <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/listings/add')}>
-              <Text style={styles.addBtnText}>+</Text>
+      <View style={{ alignSelf: 'center', maxWidth: 700, width: '100%', flex: 1 }}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={16} color="#94a3b8" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search listings..."
+            placeholderTextColor="#94a3b8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
+              <Ionicons name="close-circle" size={16} color="#cbd5e1" />
             </TouchableOpacity>
-          </View>
-        }
+          )}
+        </View>
+        <FlatList
+          data={filteredListings}
+          keyExtractor={i => String(i.id)}
+          numColumns={2}
+          contentContainerStyle={styles.list}
+          columnWrapperStyle={styles.row}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true);fetchListings();}} tintColor="#1e293b" />}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name={searchQuery ? "search-outline" : "home-outline"} size={36} color="#ddd" />
+              <Text style={styles.emptyTitle}>{searchQuery ? 'No listings match your search' : 'No listings yet'}</Text>
+              <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/listings/add')}>
+                <Text style={styles.addBtnText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          }
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => router.push(`/listings/${item.id}/edit`)} activeOpacity={0.7} style={{ flex: 1 }}>
             <View style={styles.card}>
@@ -125,6 +126,7 @@ export default function ListingsScreen() {
           </TouchableOpacity>
         )}
       />
+      </View>
       <TouchableOpacity style={styles.fab} onPress={() => router.push('/listings/add')}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>

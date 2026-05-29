@@ -5,6 +5,7 @@ import json
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import csrf_exempt
 
 from .forms import ListingForm, ReservationForm
 from .models import Listing, Reservation
@@ -338,16 +339,20 @@ def api_listings(request):
 
 def api_reservations(request):
     listing_id = request.GET.get('listing_id')
-    month = int(request.GET.get('month', datetime.date.today().month))
-    year = int(request.GET.get('year', datetime.date.today().year))
+    all_reservations = request.GET.get('all') == 'true'
 
-    reservations = Reservation.objects.select_related('listing').filter(
-        checkin_date__year=year,
-        checkin_date__month=month
-    ) | Reservation.objects.select_related('listing').filter(
-        checkout_date__year=year,
-        checkout_date__month=month
-    )
+    if all_reservations:
+        reservations = Reservation.objects.select_related('listing').all()
+    else:
+        month = int(request.GET.get('month', datetime.date.today().month))
+        year = int(request.GET.get('year', datetime.date.today().year))
+        reservations = Reservation.objects.select_related('listing').filter(
+            checkin_date__year=year,
+            checkin_date__month=month
+        ) | Reservation.objects.select_related('listing').filter(
+            checkout_date__year=year,
+            checkout_date__month=month
+        )
 
     if listing_id:
         reservations = reservations.filter(listing_id=listing_id)
@@ -365,6 +370,7 @@ def api_reservations(request):
             'checkin_date': r.checkin_date.isoformat(),
             'checkout_date': r.checkout_date.isoformat(),
             'nights': r.nights,
+            'price_per_night': str(r.price_per_night) if r.price_per_night else None,
         })
     return JsonResponse({'reservations': data})
 
@@ -396,6 +402,7 @@ def api_reservation_detail(request, pk):
     return JsonResponse(data)
 
 
+@csrf_exempt
 def api_listing_create(request):
     if request.method == 'POST':
         form = ListingForm(request.POST, request.FILES)
@@ -406,6 +413,7 @@ def api_listing_create(request):
     return JsonResponse({'error': 'POST required'}, status=405)
 
 
+@csrf_exempt
 def api_listing_update(request, pk):
     listing = get_object_or_404(Listing, pk=pk)
     if request.method == 'POST':
@@ -416,6 +424,7 @@ def api_listing_update(request, pk):
         return JsonResponse({'errors': form.errors}, status=400)
 
 
+@csrf_exempt
 def api_listing_delete(request, pk):
     listing = get_object_or_404(Listing, pk=pk)
     if request.method == 'POST':
@@ -423,6 +432,7 @@ def api_listing_delete(request, pk):
         return JsonResponse({'deleted': True})
 
 
+@csrf_exempt
 def api_reservation_create(request):
     if request.method == 'POST':
         try:
@@ -457,6 +467,7 @@ def api_reservation_create(request):
             return JsonResponse({'error': str(e)}, status=400)
 
 
+@csrf_exempt
 def api_reservation_update(request, pk):
     res = get_object_or_404(Reservation, pk=pk)
     if request.method == 'POST':
@@ -480,6 +491,7 @@ def api_reservation_update(request, pk):
         return JsonResponse({'id': res.id})
 
 
+@csrf_exempt
 def api_reservation_delete(request, pk):
     res = get_object_or_404(Reservation, pk=pk)
     if request.method == 'POST':

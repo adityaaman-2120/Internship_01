@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Modal, useWindowDimensions } from 'react-native';
 import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../../components/Header';
@@ -13,8 +13,10 @@ const BAR_COLORS = ['#d4a574', '#5bc8c8', '#7b9fd4', '#7bcf9e', '#e8837d', '#a87
 const COL_WIDTH = 38;
 const LABEL_WIDTH = 110;
 const ROW_HEIGHT = 42;
+const MAX_WIDTH = 700;
 
 export default function CalendarScreen() {
+  const { width: winW } = useWindowDimensions();
   const today = new Date();
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
@@ -182,7 +184,7 @@ export default function CalendarScreen() {
     <View style={s.container}>
       <Header title="Calendar" />
 
-      <View style={s.subHeader}>
+      <View style={[s.subHeader, { alignSelf: 'center', maxWidth: MAX_WIDTH, width: '100%' }]}>
         <View style={{ width: 36 }} />
         <View style={s.subHeaderCenter}>
           <TouchableOpacity onPress={prevMonth} style={s.navBtn}><Text style={s.navArrow}>‹</Text></TouchableOpacity>

@@ -6,7 +6,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#00b4b4',
+        tabBarActiveTintColor: '#555558',
         tabBarInactiveTintColor: '#aaa',
         tabBarStyle: {
           backgroundColor: '#fff',
@@ -37,6 +37,10 @@ export default function TabLayout() {
       <Tabs.Screen name="reservations" options={{
         title: 'Reservations',
         tabBarIcon: ({ color }) => <Ionicons name="people-outline" size={20} color={color} />,
+      }} />
+      <Tabs.Screen name="profile" options={{
+        title: 'Profile',
+        tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={20} color={color} />,
       }} />
     </Tabs>
   );

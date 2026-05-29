@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, RefreshControl, Alert, useWindowDimensions } from 'react-native';
 import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../../components/Header';
@@ -56,33 +56,34 @@ export default function ReservationsScreen() {
   return (
     <View style={styles.container}>
       <Header title="Reservations" />
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color="#bbb" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by guest, listing, or date..."
-          placeholderTextColor="#bbb"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          clearButtonMode="while-editing"
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
-            <Ionicons name="close-circle" size={16} color="#ccc" />
-          </TouchableOpacity>
-        )}
-      </View>
-      <FlatList
-        data={filteredReservations}
-        keyExtractor={i => String(i.id)}
-        contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true);fetchReservations();}} tintColor="#555558" />}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name={searchQuery ? "search-outline" : "calendar-outline"} size={36} color="#ddd" />
-            <Text style={styles.emptyText}>{searchQuery ? 'No reservations match your search' : 'No reservations found'}</Text>
-          </View>
-        }
+      <View style={{ alignSelf: 'center', maxWidth: 700, width: '100%', flex: 1 }}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={16} color="#bbb" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by guest, listing, or date..."
+            placeholderTextColor="#bbb"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
+              <Ionicons name="close-circle" size={16} color="#ccc" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <FlatList
+          data={filteredReservations}
+          keyExtractor={i => String(i.id)}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true);fetchReservations();}} tintColor="#555558" />}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name={searchQuery ? "search-outline" : "calendar-outline"} size={36} color="#ddd" />
+              <Text style={styles.emptyText}>{searchQuery ? 'No reservations match your search' : 'No reservations found'}</Text>
+            </View>
+          }
         renderItem={({ item }) => {
           const today = new Date();
           const checkin = new Date(item.checkin_date);
@@ -139,6 +140,7 @@ export default function ReservationsScreen() {
           );
         }}
       />
+      </View>
       <TouchableOpacity style={styles.fab} onPress={() => router.push('/reservations/add')}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
