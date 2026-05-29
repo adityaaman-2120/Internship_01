@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { useState, useCallback, useMemo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { useFocusEffect, router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import Header from '../../components/Header';
 import Avatar from '../../components/Avatar';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -16,6 +17,18 @@ export default function ReservationsScreen() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredReservations = useMemo(() => {
+    if (!searchQuery.trim()) return reservations;
+    const q = searchQuery.toLowerCase();
+    return reservations.filter(r =>
+      r.guest_name?.toLowerCase().includes(q) ||
+      r.listing_title?.toLowerCase().includes(q) ||
+      r.checkin_date?.includes(q) ||
+      r.checkout_date?.includes(q)
+    );
+  }, [reservations, searchQuery]);
 
   const fetchReservations = async () => {
     try {
@@ -42,52 +55,128 @@ export default function ReservationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Reservations" rightLabel="＋ Add" onRight={() => router.push('/reservations/add')} />
+      <Header title="Reservations" />
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={16} color="#bbb" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by guest, listing, or date..."
+          placeholderTextColor="#bbb"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
+            <Ionicons name="close-circle" size={16} color="#ccc" />
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
-        data={reservations}
+        data={filteredReservations}
         keyExtractor={i => String(i.id)}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true);fetchReservations();}} tintColor="#00b4b4" />}
-        ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyText}>No reservations found</Text></View>}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Avatar imageUrl={item.guest_photo_url} name={item.guest_name} size={36} />
-            <View style={styles.info}>
-              <Text style={styles.guestName}>{item.guest_name}</Text>
-              <Text style={styles.listingName} numberOfLines={1}>{item.listing_title}</Text>
-              <Text style={styles.dates}>{formatDate(item.checkin_date)} → {formatDate(item.checkout_date)} · {item.nights}n</Text>
-            </View>
-            {item.price_per_night && (
-              <Text style={styles.price}>${item.price_per_night}/n</Text>
-            )}
-            <View style={styles.actions}>
-              <TouchableOpacity onPress={() => router.push(`/reservations/${item.id}/edit`)} style={styles.actionBtn}>
-                <Text style={styles.editText}>✎</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => deleteReservation(item)} style={styles.actionBtn}>
-                <Text style={styles.deleteText}>✕</Text>
-              </TouchableOpacity>
-            </View>
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>{setRefreshing(true);fetchReservations();}} tintColor="#555558" />}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name={searchQuery ? "search-outline" : "calendar-outline"} size={36} color="#ddd" />
+            <Text style={styles.emptyText}>{searchQuery ? 'No reservations match your search' : 'No reservations found'}</Text>
           </View>
-        )}
+        }
+        renderItem={({ item }) => {
+          const today = new Date();
+          const checkin = new Date(item.checkin_date);
+          const checkout = new Date(item.checkout_date);
+          let status, statusColor, statusBg;
+          if (today < checkin) { status = 'Upcoming'; statusColor = '#d4a574'; statusBg = '#fef7ec'; }
+          else if (today >= checkin && today < checkout) { status = 'Active'; statusColor = '#5fa8b0'; statusBg = '#edf7f8'; }
+          else { status = 'Completed'; statusColor = '#94a3b8'; statusBg = '#f1f4f7'; }
+
+          return (
+          <TouchableOpacity onPress={() => router.push(`/reservations/${item.id}/edit`)} activeOpacity={0.7}>
+            <View style={styles.card}>
+              <View style={styles.accent} />
+              <View style={styles.cardBody}>
+                <View style={styles.topSection}>
+                  <View style={styles.guestSection}>
+                    <Avatar imageUrl={item.guest_photo_url} name={item.guest_name} size={36} />
+                    <View style={styles.guestInfo}>
+                      <Text style={styles.guestName} numberOfLines={1}>{item.guest_name}</Text>
+                      <View style={styles.listingRow}>
+                        <Ionicons name="home-outline" size={10} color="#aaa" />
+                        <Text style={styles.listingName} numberOfLines={1}>{item.listing_title}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.topActions}>
+                    <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+                      <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+                      <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => deleteReservation(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Ionicons name="trash-outline" size={15} color="#e74c3c" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <View style={styles.dateSection}>
+                  <Ionicons name="calendar-outline" size={13} color="#888" />
+                  <Text style={styles.dates}>{formatDate(item.checkin_date)} – {formatDate(item.checkout_date)}</Text>
+                  <View style={styles.dot} />
+                  <Text style={styles.nightsText}>{item.nights} {item.nights === 1 ? 'night' : 'nights'}</Text>
+                </View>
+                {item.price_per_night && (
+                  <>
+                    <View style={styles.divider} />
+                    <View style={styles.priceSection}>
+                      <Text style={styles.priceLabel}>Price</Text>
+                      <Text style={styles.priceValue}>${item.price_per_night} <Text style={styles.pricePer}>/ night</Text></Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            </View>
+          </TouchableOpacity>
+          );
+        }}
       />
+      <TouchableOpacity style={styles.fab} onPress={() => router.push('/reservations/add')}>
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex:1, backgroundColor:'#f8f8f8' },
-  list: { padding:10 },
-  card: { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', borderRadius:10, padding:10, marginBottom:8, borderWidth:1, borderColor:'#f0f0f0', gap:10 },
-  info: { flex:1 },
-  guestName: { fontSize:13, fontWeight:'600', color:'#222' },
-  listingName: { fontSize:11, color:'#888', marginTop:1 },
-  dates: { fontSize:10, color:'#aaa', marginTop:2 },
-  price: { fontSize:11, fontWeight:'600', color:'#00b4b4' },
-  actions: { flexDirection:'column', gap:6 },
-  actionBtn: { width:26, height:26, borderRadius:13, backgroundColor:'#f5f5f5', alignItems:'center', justifyContent:'center' },
-  editText: { fontSize:13, color:'#00b4b4' },
-  deleteText: { fontSize:12, color:'#e74c3c' },
-  empty: { padding:60, alignItems:'center' },
-  emptyText: { fontSize:13, color:'#aaa' },
+  container: { flex: 1, backgroundColor: '#f5f6f8' },
+  list: { padding: 14, paddingBottom: 30 },
+  card: { backgroundColor: '#fff', borderRadius: 16, marginBottom: 10, shadowColor: '#1e293b', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 4, overflow: 'hidden' },
+  accent: { height: 3, backgroundColor: '#1e293b' },
+  cardBody: { padding: 14 },
+  topSection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  guestSection: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  guestInfo: { flex: 1 },
+  guestName: { fontSize: 16, fontWeight: '700', color: '#1e293b', letterSpacing: -0.2 },
+  listingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  listingName: { fontSize: 12, color: '#64748b', flex: 1 },
+  topActions: { alignItems: 'flex-end', gap: 6 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  statusDot: { width: 5, height: 5, borderRadius: 2.5 },
+  statusText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.2 },
+  dateSection: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingLeft: 2 },
+  dates: { fontSize: 12, color: '#475569', fontWeight: '500' },
+  dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#cbd5e1' },
+  nightsText: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 10 },
+  priceSection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  priceLabel: { fontSize: 12, color: '#94a3b8', fontWeight: '500' },
+  priceValue: { fontSize: 18, fontWeight: '800', color: '#d4a574', letterSpacing: -0.3 },
+  pricePer: { fontSize: 11, fontWeight: '400', color: '#94a3b8', letterSpacing: 0 },
+  empty: { padding: 60, alignItems: 'center', gap: 10 },
+  emptyText: { fontSize: 13, color: '#aaa' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 14, marginTop: 10, marginBottom: 4, borderRadius: 12, paddingHorizontal: 12, height: 40, shadowColor: '#1e293b', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, fontSize: 13, color: '#1e293b', height: '100%' },
+  searchClear: { padding: 2 },
+  fab: { position: 'absolute', bottom: 24, right: 20, width: 52, height: 52, borderRadius: 26, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center', shadowColor: '#1e293b', shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
+  fabText: { fontSize: 28, color: '#fff', fontWeight: '400', lineHeight: 30 },
 });

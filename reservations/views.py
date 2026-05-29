@@ -330,6 +330,8 @@ def api_listings(request):
             'id': l.id,
             'room_title': l.room_title,
             'image_url': l.room_image.url if l.room_image else None,
+            'reservation_count': l.reservations.count(),
+            'created_at': l.created_at.isoformat(),
         })
     return JsonResponse({'listings': data})
 
@@ -423,17 +425,33 @@ def api_listing_delete(request, pk):
 
 def api_reservation_create(request):
     if request.method == 'POST':
-        import json
-        data = json.loads(request.body)
         try:
             import datetime
-            res = Reservation.objects.create(
-                listing_id=data['listing_id'],
-                guest_name=data['guest_name'],
-                checkin_date=datetime.date.fromisoformat(data['checkin_date']),
-                checkout_date=datetime.date.fromisoformat(data['checkout_date']),
-                price_per_night=data.get('price_per_night'),
+            if request.content_type and 'multipart' in request.content_type:
+                listing_id = request.POST.get('listing_id')
+                guest_name = request.POST.get('guest_name')
+                checkin_date = request.POST.get('checkin_date')
+                checkout_date = request.POST.get('checkout_date')
+                price_per_night = request.POST.get('price_per_night')
+                guest_photo = request.FILES.get('guest_photo')
+            else:
+                data = json.loads(request.body)
+                listing_id = data['listing_id']
+                guest_name = data['guest_name']
+                checkin_date = data['checkin_date']
+                checkout_date = data['checkout_date']
+                price_per_night = data.get('price_per_night')
+                guest_photo = None
+            res = Reservation(
+                listing_id=listing_id,
+                guest_name=guest_name,
+                checkin_date=datetime.date.fromisoformat(checkin_date),
+                checkout_date=datetime.date.fromisoformat(checkout_date),
+                price_per_night=price_per_night,
             )
+            if guest_photo:
+                res.guest_photo = guest_photo
+            res.save()
             return JsonResponse({'id': res.id}, status=201)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
@@ -442,13 +460,22 @@ def api_reservation_create(request):
 def api_reservation_update(request, pk):
     res = get_object_or_404(Reservation, pk=pk)
     if request.method == 'POST':
-        import json, datetime
-        data = json.loads(request.body)
-        res.listing_id = data.get('listing_id', res.listing_id)
-        res.guest_name = data.get('guest_name', res.guest_name)
-        res.checkin_date = datetime.date.fromisoformat(data['checkin_date'])
-        res.checkout_date = datetime.date.fromisoformat(data['checkout_date'])
-        res.price_per_night = data.get('price_per_night', res.price_per_night)
+        import datetime
+        if request.content_type and 'multipart' in request.content_type:
+            res.listing_id = request.POST.get('listing_id', res.listing_id)
+            res.guest_name = request.POST.get('guest_name', res.guest_name)
+            res.checkin_date = datetime.date.fromisoformat(request.POST['checkin_date'])
+            res.checkout_date = datetime.date.fromisoformat(request.POST['checkout_date'])
+            res.price_per_night = request.POST.get('price_per_night', res.price_per_night)
+            if request.FILES.get('guest_photo'):
+                res.guest_photo = request.FILES['guest_photo']
+        else:
+            data = json.loads(request.body)
+            res.listing_id = data.get('listing_id', res.listing_id)
+            res.guest_name = data.get('guest_name', res.guest_name)
+            res.checkin_date = datetime.date.fromisoformat(data['checkin_date'])
+            res.checkout_date = datetime.date.fromisoformat(data['checkout_date'])
+            res.price_per_night = data.get('price_per_night', res.price_per_night)
         res.save()
         return JsonResponse({'id': res.id})
 

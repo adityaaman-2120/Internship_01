@@ -2,7 +2,8 @@ export interface Listing {
   id: number;
   room_title: string;
   image_url: string | null;
-  reservation_count?: number;
+  reservation_count: number;
+  created_at?: string;
 }
 
 export interface Reservation {

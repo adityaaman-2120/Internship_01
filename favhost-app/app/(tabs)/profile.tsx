@@ -1,0 +1,302 @@
+import { useState, useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Image, Dimensions } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Header from '../../components/Header';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import API from '../../constants/api';
+import { Listing, Reservation } from '../../types';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+export default function ProfileScreen() {
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      const [lRes, rRes] = await Promise.all([
+        fetch(API.listings),
+        fetch(API.reservations()),
+      ]);
+      setListings((await lRes.json()).listings || []);
+      setReservations((await rRes.json()).reservations || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(useCallback(() => { fetchData(); }, []));
+
+  const stats = useMemo(() => {
+    const totalListings = listings.length;
+    const totalReservations = reservations.length;
+    const uniqueGuests = new Set(reservations.map(r => r.guest_name?.toLowerCase().trim())).size;
+    let totalRevenue = 0;
+    let totalNights = 0;
+    let occupiedNights = 0;
+    const listingBookings: Record<number, number> = {};
+
+    reservations.forEach(r => {
+      const nights = r.nights || 0;
+      const price = parseFloat(r.price_per_night || '0');
+      if (!isNaN(price) && nights) {
+        totalRevenue += price * nights;
+        totalNights += nights;
+      }
+      if (nights) occupiedNights += nights;
+      listingBookings[r.listing_id] = (listingBookings[r.listing_id] || 0) + 1;
+    });
+
+    const availableNights = totalListings * 365;
+    const occupancyRate = availableNights > 0 ? (occupiedNights / availableNights) * 100 : 0;
+    const avgStay = totalReservations > 0 ? (totalNights / totalReservations) : 0;
+    const avgRevenue = totalReservations > 0 ? (totalRevenue / totalReservations) : 0;
+
+    let topListing: { title: string; count: number; image: string | null } | null = null;
+    if (listings.length > 0) {
+      let maxCount = 0;
+      let top = null;
+      listings.forEach(l => {
+        const count = listingBookings[l.id] || 0;
+        if (count > maxCount) { maxCount = count; top = l; }
+      });
+      if (top) topListing = { title: top.room_title, count: maxCount, image: top.image_url };
+    }
+
+    const recentReservations = [...reservations].sort(
+      (a, b) => new Date(b.checkin_date).getTime() - new Date(a.checkin_date).getTime()
+    ).slice(0, 5);
+
+    return { totalListings, totalReservations, uniqueGuests, totalRevenue, avgRevenue, avgStay, occupancyRate, topListing, recentReservations, totalNights };
+  }, [listings, reservations]);
+
+  const formatCurrency = (n: number) => `$${n.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  if (loading) return (
+    <View style={s.container}>
+      <Header title="Profile" />
+      <LoadingSpinner />
+    </View>
+  );
+
+  return (
+    <View style={s.container}>
+      <Header title="Profile" />
+      <ScrollView
+        contentContainerStyle={s.body}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor="#d4a574" />}
+      >
+        <LinearGradient colors={['#0f172a', '#1e293b']} style={s.hero}>
+          <View style={s.heroInner}>
+            <View style={s.avatarFrame}>
+              <View style={s.avatarCircle}>
+                <Ionicons name="business" size={26} color="#fff" />
+              </View>
+            </View>
+            <Text style={s.hostName}>Your Portfolio</Text>
+            <Text style={s.hostHandle}>{stats.totalListings} properties · {stats.totalReservations} bookings</Text>
+
+            <View style={s.statsRow}>
+              <View style={s.statItem}>
+                <Text style={s.statNumber}>{stats.totalListings}</Text>
+                <Text style={s.statLabel}>Listings</Text>
+              </View>
+              <View style={s.statDot} />
+              <View style={s.statItem}>
+                <Text style={s.statNumber}>{stats.totalReservations}</Text>
+                <Text style={s.statLabel}>Bookings</Text>
+              </View>
+              <View style={s.statDot} />
+              <View style={s.statItem}>
+                <Text style={s.statNumber}>{stats.uniqueGuests}</Text>
+                <Text style={s.statLabel}>Guests</Text>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
+
+        <View style={s.metricsGrid}>
+          <View style={s.metricCard}>
+            <View style={[s.metricIconCircle, { backgroundColor: '#fef3e7' }]}>
+              <Ionicons name="wallet-outline" size={17} color="#d4a574" />
+            </View>
+            <Text style={s.metricValue}>{formatCurrency(stats.totalRevenue)}</Text>
+            <Text style={s.metricLabel}>Total Revenue</Text>
+          </View>
+          <View style={s.metricCard}>
+            <View style={[s.metricIconCircle, { backgroundColor: '#faf5ef' }]}>
+              <Ionicons name="trending-up-outline" size={17} color="#d4a574" />
+            </View>
+            <Text style={s.metricValue}>{stats.occupancyRate.toFixed(0)}%</Text>
+            <Text style={s.metricLabel}>Occupancy</Text>
+            <View style={s.progressTrack}>
+              <View style={[s.progressFill, { width: `${Math.min(stats.occupancyRate, 100)}%`, backgroundColor: '#d4a574' }]} />
+            </View>
+          </View>
+          <View style={s.metricCard}>
+            <View style={[s.metricIconCircle, { backgroundColor: '#f0f4fa' }]}>
+              <Ionicons name="moon-outline" size={17} color="#7b9fd4" />
+            </View>
+            <Text style={s.metricValue}>{stats.avgStay.toFixed(1)}</Text>
+            <Text style={s.metricLabel}>Avg Nights</Text>
+          </View>
+          <View style={s.metricCard}>
+            <View style={[s.metricIconCircle, { backgroundColor: '#eaf7ef' }]}>
+              <Ionicons name="receipt-outline" size={17} color="#7bcf9e" />
+            </View>
+            <Text style={s.metricValue}>{formatCurrency(stats.avgRevenue)}</Text>
+            <Text style={s.metricLabel}>Avg / Booking</Text>
+          </View>
+
+          {stats.topListing && stats.topListing.count > 0 && (
+            <View style={s.topCard}>
+              <View style={s.topCardHeader}>
+                <Ionicons name="star" size={13} color="#d4a574" />
+                <Text style={s.topCardTitle}>Top Performer</Text>
+              </View>
+              <View style={s.topCardBody}>
+                {stats.topListing.image ? (
+                  <Image source={{ uri: API.base + stats.topListing.image }} style={s.topImage} />
+                ) : (
+                  <View style={s.topImagePlaceholder}>
+                    <Ionicons name="bed-outline" size={18} color="#cbd5e1" />
+                  </View>
+                )}
+                <View style={s.topInfo}>
+                  <Text style={s.topName} numberOfLines={1}>{stats.topListing.title}</Text>
+                  <Text style={s.topCount}>{stats.topListing.count} {stats.topListing.count === 1 ? 'booking' : 'bookings'} · ${stats.topListing.count > 0 && stats.totalRevenue > 0 ? Math.round(stats.totalRevenue / stats.totalReservations * stats.topListing.count) : '—'}</Text>
+                </View>
+                <View style={s.topBadge}>
+                  <Text style={s.topBadgeText}>#{1}</Text>
+                </View>
+              </View>
+            </View>
+          )}
+        </View>
+
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Recent Activity</Text>
+            <View style={s.sectionBadge}>
+              <Text style={s.sectionBadgeText}>{stats.recentReservations.length}</Text>
+            </View>
+          </View>
+          {stats.recentReservations.length === 0 ? (
+            <View style={s.emptyBox}>
+              <Ionicons name="calendar-outline" size={24} color="#e2e8f0" />
+              <Text style={s.emptyText}>No bookings yet</Text>
+            </View>
+          ) : (
+            <View style={s.activityList}>
+              {stats.recentReservations.map((r, i) => {
+                const status = new Date(r.checkout_date) < new Date() ? 'Completed' : new Date(r.checkin_date) <= new Date() ? 'Active' : 'Upcoming';
+                const statusColor = status === 'Upcoming' ? '#d4a574' : status === 'Active' ? '#5bc8c8' : '#94a3b8';
+                const statusIcon = status === 'Upcoming' ? 'time-outline' : status === 'Active' ? 'checkmark-circle' : 'checkmark-done-outline';
+                return (
+                  <View key={r.id} style={[s.activityRow, i === stats.recentReservations.length - 1 && { borderBottomWidth: 0 }]}>
+                    <View style={[s.activityStatus, { backgroundColor: statusColor + '20' }]}>
+                      <Ionicons name={statusIcon as any} size={14} color={statusColor} />
+                    </View>
+                    <View style={s.activityInfo}>
+                      <Text style={s.activityGuest} numberOfLines={1}>{r.guest_name}</Text>
+                      <Text style={s.activityListing} numberOfLines={1}>{r.listing_title}</Text>
+                    </View>
+                    <View style={s.activityRight}>
+                      <Text style={s.activityDate}>{new Date(r.checkin_date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</Text>
+                      <Text style={[s.activityStatusLabel, { color: statusColor }]}>{status}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
+        <View style={s.footer}>
+          <View style={s.footerRow}>
+            <View style={[s.footerDot, { backgroundColor: '#22c55e' }]} />
+            <Text style={s.footerText}>Server connected</Text>
+          </View>
+          <View style={s.footerDivider} />
+          <View style={s.footerRow}>
+            <Ionicons name="code-slash" size={12} color="#64748b" />
+            <Text style={s.footerText}>FavHost v1.0</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const CARD_GAP = 10;
+
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f1f3f5' },
+  body: { paddingBottom: 40 },
+
+  hero: { paddingTop: 20, paddingBottom: 24 },
+  heroInner: { alignItems: 'center', paddingHorizontal: 20 },
+  avatarFrame: { width: 80, height: 80, borderRadius: 40, borderWidth: 2.5, borderColor: '#d4a574', alignItems: 'center', justifyContent: 'center', marginBottom: 14, shadowColor: '#d4a574', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, elevation: 6 },
+  avatarCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center' },
+  hostName: { fontSize: 22, fontWeight: '700', color: '#fff', letterSpacing: -0.3 },
+  hostHandle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '500', marginTop: 2 },
+
+  statsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18, paddingVertical: 14, paddingHorizontal: 8, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, width: '100%', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  statItem: { flex: 1, alignItems: 'center' },
+  statNumber: { fontSize: 22, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  statLabel: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 3 },
+  statDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(212,165,116,0.4)' },
+
+  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: CARD_GAP, marginTop: -12 },
+  metricCard: { width: (SCREEN_WIDTH - 16 * 2 - CARD_GAP) / 2, backgroundColor: '#fff', borderRadius: 16, padding: 16, shadowColor: '#0f172a', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 3, borderWidth: 1, borderColor: '#f1f5f9' },
+  metricIconCircle: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  metricValue: { fontSize: 22, fontWeight: '700', color: '#0f172a', letterSpacing: -0.5 },
+  metricLabel: { fontSize: 10, fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 3 },
+
+  progressTrack: { height: 4, borderRadius: 2, backgroundColor: '#f1f5f9', marginTop: 8, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 2 },
+
+  topCard: { width: '100%', backgroundColor: '#fff', borderRadius: 16, padding: 16, marginTop: 0, shadowColor: '#0f172a', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 3, borderWidth: 1, borderColor: '#f1f5f9' },
+  topCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
+  topCardTitle: { fontSize: 10, fontWeight: '700', color: '#d4a574', textTransform: 'uppercase', letterSpacing: 0.6 },
+  topCardBody: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  topImage: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#f1f5f9' },
+  topImagePlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  topInfo: { flex: 1 },
+  topName: { fontSize: 14, fontWeight: '600', color: '#0f172a' },
+  topCount: { fontSize: 11, color: '#94a3b8', fontWeight: '500', marginTop: 2 },
+  topBadge: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#fef3e7', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#f5e6d0' },
+  topBadgeText: { fontSize: 11, fontWeight: '800', color: '#d4a574' },
+
+  section: { paddingHorizontal: 16, marginTop: 20 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  sectionTitle: { fontSize: 12, fontWeight: '700', color: '#0f172a', textTransform: 'uppercase', letterSpacing: 0.8 },
+  sectionBadge: { backgroundColor: '#e2e8f0', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  sectionBadgeText: { fontSize: 10, fontWeight: '700', color: '#64748b' },
+
+  activityList: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', shadowColor: '#0f172a', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 3, borderWidth: 1, borderColor: '#f1f5f9' },
+  activityRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  activityStatus: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  activityInfo: { flex: 1 },
+  activityGuest: { fontSize: 13, fontWeight: '600', color: '#0f172a' },
+  activityListing: { fontSize: 11, color: '#94a3b8', fontWeight: '500', marginTop: 1 },
+  activityRight: { alignItems: 'flex-end' },
+  activityDate: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+  activityStatusLabel: { fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 2 },
+
+  emptyBox: { alignItems: 'center', paddingVertical: 30, gap: 8 },
+  emptyText: { fontSize: 13, color: '#94a3b8', fontWeight: '500' },
+
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, marginBottom: 8, gap: 12 },
+  footerRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  footerDot: { width: 6, height: 6, borderRadius: 3 },
+  footerDivider: { width: 1, height: 12, backgroundColor: '#cbd5e1' },
+  footerText: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+});

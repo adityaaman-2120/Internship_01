@@ -13,7 +13,7 @@ export default function Header({ title, showBack, rightLabel, onRight }: Props) 
     <View style={styles.header}>
       {showBack ? (
         <TouchableOpacity onPress={() => router.back()} style={styles.side}>
-          <Text style={styles.backText}>‹ Back</Text>
+          <Text style={styles.backText}>‹</Text>
         </TouchableOpacity>
       ) : (
         <View style={styles.side}>
@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
   side: { width: 70 },
   logo: { fontSize: 15, fontWeight: '700', color: '#222' },
   logoAccent: { color: '#e74c3c' },
-  title: { fontSize: 14, fontWeight: '600', color: '#222' },
-  backText: { fontSize: 13, color: '#00b4b4', fontWeight: '500' },
+  title: { fontSize: 17, fontWeight: '700', color: '#1e293b', letterSpacing: -0.3 },
+  backText: { fontSize: 28, color: '#1e293b', fontWeight: '700' },
   right: { alignItems: 'flex-end' },
-  rightText: { fontSize: 12, color: '#00b4b4', fontWeight: '600' },
+  rightText: { fontSize: 28, color: '#1e293b', fontWeight: '700' },
 });

@@ -35,9 +35,9 @@ export default function Avatar({ imageUrl, name, size = 32 }: Props) {
 const styles = StyleSheet.create({
   image: { backgroundColor: '#f0f0f0' },
   fallback: {
-    backgroundColor: '#e8f8fa',
+    backgroundColor: '#e8e8e8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  letter: { fontWeight: '600', color: '#00b4b4' },
+  letter: { fontWeight: '600', color: '#555558' },
 });
