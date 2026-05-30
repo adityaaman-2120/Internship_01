@@ -7,12 +7,30 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": { "resizeMode": "contain", "backgroundColor": "#ffffff" },
-    "ios": { "supportsTablet": true, "bundleIdentifier": "com.favhost.app" },
-    "android": { "adaptiveIcon": { "backgroundColor": "#ffffff" }, "package": "com.favhost.app" },
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.favhost.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.favhost.app"
+    },
     "plugins": [
       "expo-router",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4c20b630-55de-454b-98f5-59af0075c34d"
+      }
+    },
+    "owner": "adityaaman_021"
   }
 }
