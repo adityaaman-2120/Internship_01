@@ -31,7 +31,7 @@ export default function DashboardScreen() {
   const todayStr = dateStr(today.getFullYear(), today.getMonth() + 1, today.getDate());
   const [listings, setListings] = useState<Listing[]>([]);
   const [allReservations, setAllReservations] = useState<Reservation[]>([]);
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [selectedListingIds, setSelectedListingIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [modalDate, setModalDate] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export default function DashboardScreen() {
     try {
       const [lRes, rRes] = await Promise.all([
         fetch(API.listings),
-        fetch(`${API.base}/api/reservations/?all=true${selectedListing ? `&listing_id=${selectedListing.id}` : ''}`),
+        fetch(`${API.base}/api/reservations/?all=true`),
       ]);
       setListings((await lRes.json()).listings || []);
       setAllReservations((await rRes.json()).reservations || []);
@@ -83,7 +83,7 @@ export default function DashboardScreen() {
     finally { setLoading(false); setRefreshing(false); }
   };
 
-  useFocusEffect(useCallback(() => { fetchData(); }, [selectedListing]));
+  useFocusEffect(useCallback(() => { fetchData(); }, []));
 
   const filteredListings = useMemo(() => {
     if (!searchQuery.trim()) return listings;
@@ -93,6 +93,7 @@ export default function DashboardScreen() {
 
   const getReservationsForMonth = useCallback((year: number, month: number) => {
     return allReservations.filter(r => {
+      if (selectedListingIds.size > 0 && !selectedListingIds.has(r.listing_id)) return false;
       const ciP = r.checkin_date.split('-').map(Number);
       const coP = r.checkout_date.split('-').map(Number);
       const ci = new Date(ciP[0], ciP[1] - 1, ciP[2]);
@@ -101,7 +102,7 @@ export default function DashboardScreen() {
       const mEnd = new Date(year, month, 0);
       return ci <= mEnd && co > mStart;
     });
-  }, [allReservations]);
+  }, [allReservations, selectedListingIds]);
 
   const getBookedDays = useCallback((year: number, month: number, reservations: Reservation[]) => {
     const set = new Set<string>();
@@ -434,8 +435,11 @@ export default function DashboardScreen() {
 
   const dayReservations = useMemo(() => {
     if (!modalDate) return [];
-    return allReservations.filter(r => r.checkin_date <= modalDate && r.checkout_date > modalDate);
-  }, [modalDate, allReservations]);
+    return allReservations.filter(r => {
+      if (selectedListingIds.size > 0 && !selectedListingIds.has(r.listing_id)) return false;
+      return r.checkin_date <= modalDate && r.checkout_date > modalDate;
+    });
+  }, [modalDate, allReservations, selectedListingIds]);
 
   const modalFmt = (() => {
     if (!modalDate) return { day: '', month: '', year: '', weekday: '' };
@@ -492,19 +496,27 @@ export default function DashboardScreen() {
           )}
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.listingStrip} contentContainerStyle={s.listingStripContent}>
-          {filteredListings.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={[s.listingChip, selectedListing?.id === item.id && s.listingChipActive]}
-              onPress={() => setSelectedListing(selectedListing?.id === item.id ? null : item)}
-            >
-              <Avatar imageUrl={item.image_url} name={item.room_title} size={18} />
-              <Text style={[s.listingChipText, selectedListing?.id === item.id && s.listingChipTextActive]} numberOfLines={1}>{item.room_title}</Text>
-              {selectedListing?.id === item.id && (
-                <Ionicons name="checkmark-circle" size={14} color="#fff" />
-              )}
-            </TouchableOpacity>
-          ))}
+          {filteredListings.map(item => {
+            const isSelected = selectedListingIds.has(item.id);
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={[s.listingChip, isSelected && s.listingChipActive]}
+                onPress={() => {
+                  const next = new Set(selectedListingIds);
+                  if (isSelected) next.delete(item.id);
+                  else next.add(item.id);
+                  setSelectedListingIds(next);
+                }}
+              >
+                <Avatar imageUrl={item.image_url} name={item.room_title} size={18} />
+                <Text style={[s.listingChipText, isSelected && s.listingChipTextActive]} numberOfLines={1}>{item.room_title}</Text>
+                {isSelected && (
+                  <Ionicons name="checkmark-circle" size={14} color="#d4a574" />
+                )}
+              </TouchableOpacity>
+            );
+          })}
           {filteredListings.length === 0 && (
             <Text style={s.listingStripEmpty}>No rooms found</Text>
           )}
@@ -558,7 +570,11 @@ export default function DashboardScreen() {
                   <Text style={s.modalEmptyText}>No reservations on this day</Text>
                   <TouchableOpacity
                     style={s.modalAddBtn}
-                    onPress={() => { setModalDate(null); router.push(`/reservations/add/?checkin=${modalDate}${selectedListing ? `&listing_id=${selectedListing.id}` : ''}`); }}
+                    onPress={() => {
+                      const firstId = selectedListingIds.size > 0 ? [...selectedListingIds][0] : null;
+                      setModalDate(null);
+                      router.push(`/reservations/add/?checkin=${modalDate}${firstId ? `&listing_id=${firstId}` : ''}`);
+                    }}
                   >
                     <Text style={s.modalAddBtnText}>+ Add Reservation</Text>
                   </TouchableOpacity>
@@ -663,9 +679,9 @@ const s = StyleSheet.create({
   listingStrip: { maxHeight: 40, marginHorizontal: 10, marginTop: 6, marginBottom: 4 },
   listingStripContent: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   listingChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 10, backgroundColor: '#fff', borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#1e293b', shadowOpacity: 0.03, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
-  listingChipActive: { backgroundColor: '#1e293b', borderColor: '#d4a574', borderWidth: 1.5 },
+  listingChipActive: { backgroundColor: '#fff', borderColor: '#d4a574', borderWidth: 1.5 },
   listingChipText: { fontSize: 11, color: '#1e293b', fontWeight: '600', maxWidth: 80 },
-  listingChipTextActive: { color: '#fff' },
+  listingChipTextActive: { color: '#d4a574' },
   listingStripEmpty: { fontSize: 11, color: '#94a3b8', fontStyle: 'italic' },
   stickyHeader: { marginHorizontal: 10, marginTop: 4, marginBottom: 2, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: '#fff', borderRadius: 8, flexDirection: 'row', alignItems: 'center', borderLeftWidth: 3, borderLeftColor: '#d4a574', borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#1e293b', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   stickyHeaderText: { fontSize: 15, fontWeight: '700', color: '#1e293b', letterSpacing: -0.3, flex: 1 },

@@ -37,12 +37,7 @@ export default function AddReservationScreen() {
     return listings.find(l => l.id === selectedListing)?.room_title || '';
   }, [selectedListing, listings]);
 
-  const formatDate = (d: Date) => {
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const yyyy = d.getFullYear();
-    return `${dd}-${mm}-${yyyy}`;
-  };
+  const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
   const displayDate = (d: Date) => d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
