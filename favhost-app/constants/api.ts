@@ -1,12 +1,8 @@
-// ── Target environment ──────────────────────────────────────────────────────
-//   'local'    → your local dev server
-//   'tunnel'   → ngrok/LHR tunnel for sharing
-//   'production' → Render.com (set RENDER_URL below after deploy)
-const TARGET: 'local' | 'tunnel' | 'production' = 'local';
+const TARGET: 'local' | 'tunnel' | 'production' = 'production';
 
 const TUNNEL_URL = 'https://cf7f29b309cceb.lhr.life';
 const LOCAL_URL = 'http://10.90.212.156:8000';
-const RENDER_URL = 'https://REPLACE_ME.onrender.com';
+const RENDER_URL = 'https://hotel-calendar.onrender.com';
 
 const BASE_URL =
   TARGET === 'production' ? RENDER_URL :
