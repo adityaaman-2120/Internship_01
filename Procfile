@@ -1,0 +1,1 @@
+web: gunicorn hotel_calendar.wsgi:application --bind 0.0.0.0:$PORT
