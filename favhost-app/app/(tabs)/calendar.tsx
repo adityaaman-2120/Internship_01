@@ -178,6 +178,19 @@ export default function CalendarScreen() {
     return '#5bc8c8';
   };
 
+  const monthSummary = useMemo(() => {
+    if (!reservations.length || !listings.length) return null;
+    const totalNights = reservations.reduce((sum, r) => {
+      const ci = new Date(r.checkin_date);
+      const co = new Date(r.checkout_date);
+      return sum + Math.round((co.getTime() - ci.getTime()) / 86400000);
+    }, 0);
+    const totalRoomNights = listings.length * daysInMonth;
+    const occ = totalRoomNights > 0 ? Math.round((totalNights / totalRoomNights) * 100) : 0;
+    const activeListings = new Set(reservations.map(r => r.listing_id)).size;
+    return { totalBookings: reservations.length, totalNights, occ, activeListings };
+  }, [reservations, listings, daysInMonth]);
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -185,18 +198,19 @@ export default function CalendarScreen() {
       <Header title="Calendar" />
 
       <View style={[s.subHeader, { alignSelf: 'center', maxWidth: MAX_WIDTH, width: '100%' }]}>
-        <View style={{ width: 36 }} />
+        <TouchableOpacity onPress={prevMonth} style={s.navBtnSide}><Ionicons name="chevron-back" size={16} color="#1e293b" /></TouchableOpacity>
         <View style={s.subHeaderCenter}>
-          <TouchableOpacity onPress={prevMonth} style={s.navBtn}><Text style={s.navArrow}>‹</Text></TouchableOpacity>
           <TouchableOpacity onPress={() => setShowMonthDropdown(true)} style={s.monthDropdownTrigger}>
             <Text style={s.monthTitle}>{MONTH_NAMES[month - 1]} {year}</Text>
-            <Ionicons name="chevron-down" size={10} color="#1e293b" />
+            <Ionicons name="chevron-down" size={10} color="#64748b" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={nextMonth} style={s.navBtn}><Text style={s.navArrow}>›</Text></TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => setShowStats(true)} style={s.statsBtn}>
-          <Ionicons name="bar-chart-outline" size={15} color="#64748b" />
-        </TouchableOpacity>
+        <View style={s.subHeaderRight}>
+          <TouchableOpacity onPress={() => setShowStats(true)} style={s.statsBtn}>
+            <Ionicons name="bar-chart-outline" size={14} color="#64748b" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={nextMonth} style={s.navBtnSide}><Ionicons name="chevron-forward" size={16} color="#1e293b" /></TouchableOpacity>
+        </View>
       </View>
 
       <Modal visible={showMonthDropdown} transparent animationType="fade" onRequestClose={() => setShowMonthDropdown(false)}>
@@ -217,13 +231,14 @@ export default function CalendarScreen() {
 
       {selection !== null && (
         <View style={s.selectionHint}>
+          <Ionicons name="calendar-outline" size={13} color="#d4a574" />
           <Text style={s.selectionHintText}>
             {selection.endDay === null
-              ? `Tap a check-out day (or tap again to book 1 night)`
+              ? `Tap check-out day (or tap again for 1 night)`
               : `Tap end day`}
           </Text>
           <TouchableOpacity onPress={() => setSelection(null)} style={s.selectionCancel}>
-            <Text style={s.selectionCancelText}>Clear</Text>
+            <Text style={s.selectionCancelText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -231,6 +246,7 @@ export default function CalendarScreen() {
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor="#d4a574" />}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
       >
         <View style={{ flexDirection: 'row' }}>
           <View style={s.labelColumn}>
@@ -314,6 +330,40 @@ export default function CalendarScreen() {
             </View>
           </ScrollView>
         </View>
+
+        {monthSummary && (
+          <View style={s.summarySection}>
+            <View style={s.summaryHeader}>
+              <Ionicons name="stats-chart-outline" size={13} color="#d4a574" />
+              <Text style={s.summaryTitle}>Month at a Glance</Text>
+            </View>
+            <View style={s.summaryGrid}>
+              <View style={s.summaryCard}>
+                <Text style={s.summaryValue}>{monthSummary.totalBookings}</Text>
+                <Text style={s.summaryLabel}>Bookings</Text>
+              </View>
+              <View style={s.summaryCard}>
+                <Text style={[s.summaryValue, { color: getOccColor(monthSummary.occ) }]}>{monthSummary.occ}%</Text>
+                <Text style={s.summaryLabel}>Occupancy</Text>
+              </View>
+              <View style={s.summaryCard}>
+                <Text style={s.summaryValue}>{monthSummary.totalNights}</Text>
+                <Text style={s.summaryLabel}>Nights</Text>
+              </View>
+              <View style={s.summaryCard}>
+                <Text style={s.summaryValue}>{monthSummary.activeListings}/{listings.length}</Text>
+                <Text style={s.summaryLabel}>Active</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {!monthSummary && listings.length > 0 && (
+          <View style={s.summaryEmpty}>
+            <Ionicons name="calendar-outline" size={22} color="#d4c8b8" />
+            <Text style={s.summaryEmptyText}>No reservations this month</Text>
+          </View>
+        )}
       </ScrollView>
 
       <Modal visible={showStats} transparent animationType="fade" onRequestClose={() => setShowStats(false)}>
@@ -353,13 +403,24 @@ export default function CalendarScreen() {
                     ))}
                   </View>
                 </View>
+                <View style={s.statsBarSection}>
+                  {statsData.occupancy.map((val, i) => (
+                    <View key={i} style={s.statsBarRow}>
+                      <Text style={s.statsBarLabel}>{statsData.columns[i]}</Text>
+                      <View style={s.statsBarTrack}>
+                        <View style={[s.statsBarFill, { width: `${Math.min(val, 100)}%`, backgroundColor: getOccColor(val) }]} />
+                      </View>
+                      <Text style={[s.statsBarPct, { color: getOccColor(val) }]}>{val}%</Text>
+                    </View>
+                  ))}
+                </View>
                 <View style={s.statsFooter}>
                   <Text style={s.statsFooterText}>{statsData.totalListings} listings · {MONTH_NAMES[month - 1]}</Text>
                 </View>
               </>
             ) : (
               <View style={s.statsEmpty}>
-                <Ionicons name="bar-chart-outline" size={28} color="#e2e8f0" />
+                <Ionicons name="bar-chart-outline" size={28} color="#d4c8b8" />
                 <Text style={s.statsEmptyText}>No data available</Text>
               </View>
             )}
@@ -374,58 +435,73 @@ export default function CalendarScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f6f8' },
-  subHeader: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#cbd5e1', elevation: 2, shadowColor: '#1e293b', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
-  subHeaderCenter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, flex: 1 },
-  navBtn: { padding: 6 },
-  navArrow: { fontSize: 18, color: '#1e293b', fontWeight: '700' },
-  monthTitle: { fontSize: 13, fontWeight: '700', color: '#1e293b', letterSpacing: -0.2 },
-  monthDropdownTrigger: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8f9fc', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, minWidth: 120, justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
-  statsBtn: { width: 36, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8f9fc', marginRight: 8 },
+  container: { flex: 1, backgroundColor: '#f8f7f4' },
+  subHeader: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', elevation: 2, shadowColor: '#1e293b', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
+  subHeaderCenter: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  subHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  navBtnSide: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#f8f7f4', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  monthTitle: { fontSize: 14, fontWeight: '700', color: '#1e293b', letterSpacing: -0.3 },
+  monthDropdownTrigger: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#f8f7f4', borderWidth: 1, borderColor: '#e2e8f0' },
+  statsBtn: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8f7f4', borderWidth: 1, borderColor: '#e2e8f0' },
   dropdownOverlay: { flex: 1, justifyContent: 'flex-start', paddingTop: 120, alignItems: 'center', backgroundColor: 'rgba(15,23,42,0.3)' },
-  dropdown: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', shadowColor: '#0f172a', shadowOpacity: 0.15, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 8, minWidth: 200, borderWidth: 1, borderColor: '#cbd5e1' },
+  dropdown: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', shadowColor: '#0f172a', shadowOpacity: 0.15, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 8, minWidth: 200, borderWidth: 1, borderColor: '#e2e8f0' },
   dropdownItem: { paddingVertical: 13, paddingHorizontal: 28, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  dropdownItemCurrent: { backgroundColor: '#f8f9fc' },
+  dropdownItemCurrent: { backgroundColor: '#fef6ee' },
   dropdownItemText: { fontSize: 14, fontWeight: '600', color: '#1e293b' },
-  dropdownItemTextCurrent: { color: '#94a3b8' },
-  selectionHint: { backgroundColor: '#fef3e7', paddingVertical: 8, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#d4a574' },
+  dropdownItemTextCurrent: { color: '#d4a574' },
+  selectionHint: { backgroundColor: '#fef6ee', paddingVertical: 8, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   selectionHintText: { fontSize: 11, color: '#1e293b', fontWeight: '500', flex: 1 },
-  selectionCancel: { paddingLeft: 12 },
-  selectionCancelText: { fontSize: 11, color: '#e74c3c', fontWeight: '600' },
-  labelColumn: { width: LABEL_WIDTH, zIndex: 10, backgroundColor: '#fff', borderRightWidth: 1, borderRightColor: '#cbd5e1' },
-  labelHeaderCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f3f5', borderBottomWidth: 1, borderBottomColor: '#cbd5e1' },
-  headerCornerText: { fontSize: 10, color: '#64748b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  labelCell: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#cbd5e1' },
-  labelCellEven: { backgroundColor: '#f8fafc' },
+  selectionCancel: { paddingLeft: 8 },
+  selectionCancelText: { fontSize: 11, color: '#94a3b8', fontWeight: '600' },
+  labelColumn: { width: LABEL_WIDTH, zIndex: 10, backgroundColor: '#fff', borderRightWidth: 1, borderRightColor: '#e2e8f0' },
+  labelHeaderCell: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8f7f4', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  headerCornerText: { fontSize: 10, color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  labelCell: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  labelCellEven: { backgroundColor: '#faf9f7' },
   labelText: { fontSize: 11, color: '#1e293b', fontWeight: '600', flex: 1 },
-  headerRow: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#cbd5e1' },
-  dayHeaderCell: { width: COL_WIDTH, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: '#cbd5e1', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', backgroundColor: '#f1f3f5' },
-  todayHeader: { backgroundColor: '#fef3e7', borderBottomColor: '#d4a574' },
+  headerRow: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  dayHeaderCell: { width: COL_WIDTH, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: '#e2e8f0', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', backgroundColor: '#f8f7f4' },
+  todayHeader: { backgroundColor: '#fef6ee', borderBottomColor: '#d4a574' },
   dayNum: { fontSize: 11, fontWeight: '600', color: '#1e293b' },
-  daySubLabel: { fontSize: 8, color: '#64748b', fontWeight: '600' },
+  daySubLabel: { fontSize: 8, color: '#94a3b8', fontWeight: '600' },
   todayNum: { color: '#d4a574', fontWeight: '800' },
   listingRow: { flexDirection: 'row', position: 'relative' },
-  listingRowEven: { backgroundColor: '#f8fafc' },
-  dayCell: { width: COL_WIDTH, height: ROW_HEIGHT, borderRightWidth: 1, borderRightColor: '#cbd5e1', borderBottomWidth: 1, borderBottomColor: '#cbd5e1' },
-  todayCell: { backgroundColor: '#fefcf9' },
-  selectedCell: { backgroundColor: '#fef3e7' },
+  listingRowEven: { backgroundColor: '#faf9f7' },
+  dayCell: { width: COL_WIDTH, height: ROW_HEIGHT, borderRightWidth: 1, borderRightColor: '#e2e8f0', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  todayCell: { backgroundColor: '#fffaf5', borderBottomColor: '#d4a574' },
+  selectedCell: { backgroundColor: '#fef6ee' },
   resBar: { position: 'absolute', top: 7, height: 28, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, gap: 4, zIndex: 3, overflow: 'hidden', shadowColor: '#1e293b', shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   barName: { fontSize: 10, color: '#fff', fontWeight: '600', flex: 1 },
   emptyState: { padding: 60, alignItems: 'center' },
   emptyText: { fontSize: 14, color: '#94a3b8' },
+  summarySection: { alignSelf: 'center', width: '100%', maxWidth: MAX_WIDTH, paddingHorizontal: 12, paddingTop: 16 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
+  summaryTitle: { fontSize: 12, fontWeight: '700', color: '#1e293b', letterSpacing: -0.1, textTransform: 'uppercase' },
+  summaryGrid: { flexDirection: 'row', gap: 8 },
+  summaryCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 8, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#1e293b', shadowOpacity: 0.03, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  summaryValue: { fontSize: 18, fontWeight: '800', color: '#1e293b', letterSpacing: -0.5 },
+  summaryLabel: { fontSize: 9, color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 2 },
+  summaryEmpty: { alignSelf: 'center', width: '100%', maxWidth: MAX_WIDTH, paddingHorizontal: 12, paddingTop: 40, alignItems: 'center', gap: 8 },
+  summaryEmptyText: { fontSize: 13, color: '#b8a898', fontWeight: '500' },
   statsOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.4)', justifyContent: 'center', alignItems: 'center' },
   statsPopup: { backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', shadowColor: '#0f172a', shadowOpacity: 0.15, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 10, minWidth: 300 },
-  statsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 18, borderBottomWidth: 1, borderBottomColor: '#cbd5e1' },
+  statsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 18, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   statsTitle: { fontSize: 14, fontWeight: '700', color: '#1e293b', letterSpacing: -0.2 },
-  statsCloseBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#f8f9fc', alignItems: 'center', justifyContent: 'center' },
+  statsCloseBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#f8f7f4', alignItems: 'center', justifyContent: 'center' },
   statsTable: { paddingHorizontal: 4 },
   statsRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   statsLabel: { paddingVertical: 10, paddingHorizontal: 14, fontWeight: '600', color: '#1e293b', fontSize: 12, minWidth: 100 },
-  statsLabelHeader: { backgroundColor: '#fafafa', color: '#64748b', fontWeight: '700', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statsLabelHeader: { backgroundColor: '#faf9f7', color: '#64748b', fontWeight: '700', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
   statsCell: { paddingVertical: 10, paddingHorizontal: 10, textAlign: 'center', fontSize: 13, color: '#1e293b', fontWeight: '500', minWidth: 64, borderLeftWidth: 1, borderLeftColor: '#e2e8f0' },
-  statsCellHeader: { backgroundColor: '#fafafa', color: '#64748b', fontWeight: '700', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statsCellHeader: { backgroundColor: '#faf9f7', color: '#64748b', fontWeight: '700', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
   statsCellBold: { fontWeight: '700' },
-  statsFooter: { paddingVertical: 10, paddingHorizontal: 18, backgroundColor: '#f1f3f5', borderTopWidth: 1, borderTopColor: '#cbd5e1', alignItems: 'flex-end' },
+  statsBarSection: { padding: 16, gap: 10, borderTopWidth: 1, borderTopColor: '#e2e8f0' },
+  statsBarRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statsBarLabel: { width: 56, fontSize: 10, color: '#64748b', fontWeight: '600' },
+  statsBarTrack: { flex: 1, height: 8, backgroundColor: '#f1f0ed', borderRadius: 4, overflow: 'hidden' },
+  statsBarFill: { height: '100%', borderRadius: 4 },
+  statsBarPct: { width: 40, fontSize: 11, fontWeight: '700', textAlign: 'right' },
+  statsFooter: { paddingVertical: 10, paddingHorizontal: 18, backgroundColor: '#f8f7f4', borderTopWidth: 1, borderTopColor: '#e2e8f0', alignItems: 'flex-end' },
   statsFooterText: { fontSize: 10, color: '#94a3b8', fontWeight: '500' },
   statsEmpty: { padding: 40, alignItems: 'center', gap: 8 },
   statsEmptyText: { fontSize: 13, color: '#94a3b8', fontWeight: '500' },
